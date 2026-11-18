@@ -1,1177 +1,451 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WetsuitIQ — Trusted Triathlon Wetsuit Advisor</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Enter your measurements and compare your wetsuit size and fit across Zone3, Orca, Sailfish, Blueseventy, HUUB, ROKA, 2XU and TYR.">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --ink:      #0f1117;
-    --ink-60:   #6b7280;
-    --ink-30:   #d1d5db;
-    --water:    #0e4d6e;
-    --water-lt: #e6f2f8;
-    --foam:     #f0f4f4;
-    --white:    #ffffff;
-    --pulse:    #00c896;
-    --radius:   10px;
-    --shadow:   0 2px 16px rgba(14,77,110,.10);
-  }
-  html { scroll-behavior: smooth; }
-  body { font-family:'Inter',sans-serif; background:var(--foam); color:var(--ink); min-height:100vh; font-size:15px; line-height:1.6; }
-
-  /* HERO */
-  .hero { background:var(--water); color:#fff; padding:56px 24px 48px; text-align:center; position:relative; overflow:hidden; }
-  .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 120%, rgba(0,200,150,.18) 0%, transparent 70%); pointer-events:none; }
-  .hero-badge { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--pulse); border:1px solid var(--pulse); padding:4px 12px; border-radius:100px; margin-bottom:18px; }
-  .hero h1 { font-family:'DM Serif Display',serif; font-size:clamp(1.9rem,4.5vw,3.1rem); line-height:1.18; max-width:580px; margin:0 auto 14px; }
-  .hero h1 em { font-style:italic; color:var(--pulse); }
-  .hero p { font-size:15px; color:rgba(255,255,255,.7); max-width:440px; margin:0 auto 32px; }
-  .btn-primary { display:inline-block; background:var(--pulse); color:var(--ink); font-weight:600; font-size:15px; padding:13px 30px; border-radius:100px; text-decoration:none; cursor:pointer; border:none; transition:transform .15s,box-shadow .15s; box-shadow:0 4px 24px rgba(0,200,150,.35); font-family:inherit; }
-  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,200,150,.45); }
-  .trust-row { display:flex; justify-content:center; gap:28px; flex-wrap:wrap; margin-top:36px; padding-top:24px; border-top:1px solid rgba(255,255,255,.12); font-size:12px; color:rgba(255,255,255,.5); letter-spacing:.06em; }
-  .trust-row span { display:flex; align-items:center; gap:6px; }
-  .trust-dot { width:6px; height:6px; border-radius:50%; background:var(--pulse); display:inline-block; }
-
-  /* QUIZ LAYOUT */
-  #quiz { max-width:1100px; margin:0 auto; padding:40px 24px 80px; display:grid; grid-template-columns:1fr 320px; gap:28px; align-items:start; }
-  .q-col {}
-  .progress-bar-track { height:4px; background:var(--ink-30); border-radius:100px; margin-bottom:28px; overflow:hidden; }
-  .progress-bar-fill { height:100%; background:var(--pulse); border-radius:100px; transition:width .4s ease; }
-
-  .step { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); padding:36px 32px; display:none; animation:fadeUp .3s ease; }
-  .step.active { display:block; }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-
-  .step-label { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-60); margin-bottom:8px; }
-  .step h2 { font-family:'DM Serif Display',serif; font-size:1.45rem; line-height:1.3; margin-bottom:5px; }
-  .step .hint { font-size:13px; color:var(--ink-60); margin-bottom:24px; }
-
-  .field-group { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
-  .field { flex:1; min-width:140px; }
-  .field label { display:block; font-size:13px; font-weight:500; color:var(--ink-60); margin-bottom:5px; }
-  .field input { width:100%; padding:10px 13px; border:1.5px solid var(--ink-30); border-radius:8px; font-family:inherit; font-size:15px; color:var(--ink); background:var(--foam); outline:none; transition:border-color .15s; }
-  .field input:focus { border-color:var(--water); background:var(--white); }
-
-  .options { display:flex; flex-direction:column; gap:9px; margin-bottom:24px; }
-  .opt { display:flex; align-items:center; gap:12px; border:1.5px solid var(--ink-30); border-radius:8px; padding:12px 14px; cursor:pointer; transition:border-color .15s,background .15s; user-select:none; }
-  .opt:hover { border-color:var(--water); background:var(--water-lt); }
-  .opt.selected { border-color:var(--water); background:var(--water-lt); }
-  .opt input[type=radio] { display:none; }
-  .opt-icon { width:34px; height:34px; border-radius:6px; background:var(--foam); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
-  .opt.selected .opt-icon { background:var(--water); }
-  .opt-text strong { display:block; font-weight:600; font-size:14px; }
-  .opt-text small { color:var(--ink-60); font-size:12px; }
-
-  /* gender cards (bigger, 2-col) */
-  .gender-opts { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
-  .gender-opt { display:flex; flex-direction:column; align-items:center; gap:8px; border:1.5px solid var(--ink-30); border-radius:10px; padding:24px 16px 20px; cursor:pointer; transition:border-color .15s,background .15s; user-select:none; text-align:center; }
-  .gender-opt:hover { border-color:var(--water); background:var(--water-lt); }
-  .gender-opt.selected { border-color:var(--water); background:var(--water-lt); }
-  .gender-opt input[type=radio] { display:none; }
-  .gender-icon { font-size:32px; }
-  .gender-opt strong { font-size:15px; font-weight:600; }
-  .gender-opt small { font-size:12px; color:var(--ink-60); }
-
-  .nav-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-  .btn-back { background:none; border:none; color:var(--ink-60); font-size:14px; cursor:pointer; font-family:inherit; padding:10px 0; display:flex; align-items:center; gap:5px; }
-  .btn-back:hover { color:var(--ink); }
-  .btn-next { background:var(--water); color:#fff; font-weight:600; font-size:15px; padding:11px 26px; border:none; border-radius:100px; cursor:pointer; transition:background .15s,transform .1s; font-family:inherit; }
-  .btn-next:hover { background:#0d3f5a; transform:translateY(-1px); }
-  .btn-next:disabled { background:var(--ink-30); cursor:default; transform:none; }
-
-  /* sizing note callout */
-  .sizing-note { background:var(--water-lt); border-left:3px solid var(--water); border-radius:6px; padding:10px 14px; font-size:12px; color:var(--ink-60); margin-bottom:20px; line-height:1.5; }
-  .sizing-note strong { color:var(--water); }
-
-  /* RANKINGS PANEL */
-  .rankings-col { position:sticky; top:24px; }
-  .rankings-panel { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); padding:24px 22px; }
-  .rankings-panel h3 { font-family:'DM Serif Display',serif; font-size:1.05rem; margin-bottom:4px; }
-  .rankings-meta { font-size:12px; color:var(--ink-60); margin-bottom:20px; }
-  .rank-item { margin-bottom:16px; }
-  .rank-item:last-child { margin-bottom:0; }
-  .rank-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px; }
-  .rank-name { font-weight:600; font-size:14px; display:flex; align-items:center; gap:7px; }
-  .rank-pos { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; color:var(--ink-60); }
-  .rank-pos.first { color:var(--pulse); }
-  .rank-pct { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:500; color:var(--ink); }
-  .rank-bar-track { height:5px; background:var(--foam); border-radius:100px; overflow:hidden; }
-  .rank-bar-fill { height:100%; border-radius:100px; transition:width .6s cubic-bezier(.16,1,.3,1), background .4s; }
-  .rank-bar-fill.first  { background:var(--pulse); }
-  .rank-bar-fill.second { background:var(--water); }
-  .rank-bar-fill.third  { background:#7db8d4; }
-  .rank-bar-fill.fourth { background:var(--ink-30); }
-  .rank-bar-fill.fifth  { background:var(--ink-30); }
-  .rank-divider { border:none; border-top:1px solid var(--ink-30); margin:16px 0 14px; }
-  .rankings-note { font-size:11px; color:var(--ink-60); line-height:1.5; }
-  .rank-placeholder { text-align:center; padding:20px 0; }
-  .rank-placeholder .icon { font-size:28px; margin-bottom:8px; }
-  .rank-placeholder p { font-size:13px; color:var(--ink-60); }
-
-  /* RESULTS */
-  #results { display:none; max-width:720px; margin:0 auto; padding:48px 24px 80px; }
-  .results-header { text-align:center; margin-bottom:36px; }
-  .results-badge { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--pulse); background:rgba(0,200,150,.1); padding:4px 12px; border-radius:100px; margin-bottom:14px; }
-  .results-header h2 { font-family:'DM Serif Display',serif; font-size:clamp(1.6rem,4vw,2.3rem); margin-bottom:8px; }
-  .results-header p { color:var(--ink-60); }
-
-  .size-card { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); padding:26px 28px; margin-bottom:24px; display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
-  .size-badge { font-family:'DM Serif Display',serif; font-size:2.2rem; color:var(--water); line-height:1; background:var(--water-lt); padding:16px 20px; border-radius:8px; flex-shrink:0; white-space:nowrap; }
-  .size-text strong { font-size:16px; display:block; margin-bottom:3px; }
-  .size-text p { font-size:13px; color:var(--ink-60); margin-bottom:4px; }
-  .size-tag { display:inline-block; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; padding:3px 9px; border-radius:100px; background:rgba(0,200,150,.12); color:var(--pulse); margin-top:4px; }
-
-  .confidence-row { display:flex; gap:10px; align-items:center; font-size:13px; color:var(--ink-60); margin-bottom:20px; }
-  .conf-pill { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; padding:4px 11px; border-radius:100px; background:rgba(0,200,150,.12); color:var(--pulse); }
-
-  .match-card { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px 26px; margin-bottom:14px; position:relative; border-left:4px solid transparent; transition:transform .15s; }
-  .match-card:hover { transform:translateX(2px); }
-  .match-card.top    { border-left-color:var(--pulse); }
-  .match-card.second { border-left-color:var(--water); }
-  .match-card.third  { border-left-color:#7db8d4; }
-  .match-card.fourth { border-left-color:var(--ink-30); }
-  .match-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
-  .match-name { font-family:'DM Serif Display',serif; font-size:1.2rem; }
-  .match-badge { font-size:11px; color:var(--ink-60); }
-  .match-pct { font-family:'JetBrains Mono',monospace; font-size:1.9rem; font-weight:500; line-height:1; }
-  .match-card.top    .match-pct { color:var(--pulse); }
-  .match-card.second .match-pct { color:var(--water); }
-  .match-card.third  .match-pct { color:#7db8d4; }
-  .match-card.fourth .match-pct { color:var(--ink-60); }
-  .match-bar-track { height:5px; background:var(--foam); border-radius:100px; margin-bottom:12px; overflow:hidden; }
-  .match-bar-fill { height:100%; border-radius:100px; transition:width 1.2s cubic-bezier(.16,1,.3,1); }
-  .top    .match-bar-fill { background:var(--pulse); }
-  .second .match-bar-fill { background:var(--water); }
-  .third  .match-bar-fill { background:#7db8d4; }
-  .fourth .match-bar-fill { background:var(--ink-30); }
-  .match-why { font-size:13px; color:var(--ink-60); line-height:1.65; }
-  .top-label { position:absolute; top:14px; right:14px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; background:var(--pulse); color:var(--ink); padding:3px 9px; border-radius:100px; font-weight:600; }
-
-  .cta-box { background:var(--water); color:#fff; border-radius:var(--radius); padding:32px; display:flex; gap:20px; align-items:center; flex-wrap:wrap; margin-top:28px; }
-  .cta-box h3 { font-family:'DM Serif Display',serif; font-size:1.25rem; margin-bottom:5px; }
-  .cta-box p { font-size:13px; opacity:.72; }
-  .cta-text { flex:1; }
-  .restart-row { text-align:center; margin-top:20px; }
-  .btn-restart { background:none; border:none; color:var(--ink-60); font-size:14px; cursor:pointer; font-family:inherit; text-decoration:underline; padding:8px; }
-  .btn-restart:hover { color:var(--ink); }
-
-  footer { border-top:1px solid var(--ink-30); text-align:center; padding:22px; font-size:12px; color:var(--ink-60); }
-
-  /* country select */
-  .country-select { width:100%; padding:11px 14px; border:1.5px solid var(--ink-30); border-radius:8px; font-family:inherit; font-size:15px; color:var(--ink); background:var(--foam); outline:none; transition:border-color .15s; margin-bottom:24px; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; }
-  .country-select:focus { border-color:var(--water); background-color:var(--white); }
-
-  /* help button */
-  .label-row { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
-  .label-row label { font-size:13px; font-weight:500; color:var(--ink-60); }
-  .help-btn { width:18px; height:18px; border-radius:50%; background:var(--ink-30); border:none; cursor:pointer; font-size:11px; font-weight:700; color:var(--ink-60); display:inline-flex; align-items:center; justify-content:center; padding:0; transition:background .15s,color .15s; flex-shrink:0; }
-  .help-btn:hover { background:var(--water); color:#fff; }
-
-  /* modal */
-  .modal-overlay { position:fixed; inset:0; background:rgba(15,17,23,.55); z-index:100; display:none; align-items:center; justify-content:center; padding:20px; }
-  .modal-overlay.open { display:flex; }
-  .modal { background:var(--white); border-radius:var(--radius); box-shadow:0 8px 40px rgba(14,77,110,.2); max-width:460px; width:100%; padding:32px 28px; position:relative; animation:fadeUp .25s ease; }
-  .modal h3 { font-family:"DM Serif Display",serif; font-size:1.25rem; margin-bottom:14px; }
-  .modal-close { position:absolute; top:16px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:var(--ink-60); line-height:1; padding:4px; }
-  .modal-close:hover { color:var(--ink); }
-  .measure-step { display:flex; gap:14px; margin-bottom:16px; align-items:flex-start; }
-  .measure-num { width:26px; height:26px; border-radius:50%; background:var(--water); color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
-  .measure-step p { font-size:13px; color:var(--ink-60); line-height:1.6; margin:0; }
-  .measure-step p strong { color:var(--ink); }
-  .modal-tip { background:var(--water-lt); border-left:3px solid var(--water); border-radius:6px; padding:10px 14px; font-size:12px; color:var(--ink-60); margin-top:6px; line-height:1.5; }
-
-  /* discount toggle */
-  .discount-toggle-wrap { margin-top:28px; border:1.5px solid var(--ink-30); border-radius:var(--radius); overflow:hidden; }
-  .discount-toggle { width:100%; display:flex; align-items:center; gap:12px; padding:16px 20px; background:var(--white); border:none; cursor:pointer; font-family:inherit; font-size:15px; font-weight:600; color:var(--ink); text-align:left; transition:background .15s; }
-  .discount-toggle:hover { background:var(--foam); }
-  .discount-toggle-icon { font-size:18px; }
-  .discount-toggle-chevron { margin-left:auto; font-size:11px; color:var(--ink-60); transition:transform .25s; }
-  .discount-toggle-chevron.open { transform:rotate(180deg); }
-  .discount-panel { display:none; padding:20px 20px 24px; border-top:1px solid var(--ink-30); background:var(--foam); }
-  .discount-panel.open { display:block; animation:fadeUp .2s ease; }
-  .discount-panel p { font-size:13px; color:var(--ink-60); margin-bottom:16px; line-height:1.6; }
-  .discount-note { font-size:11px; color:var(--ink-60); margin-top:12px !important; margin-bottom:0 !important; }
-
-  @media (max-width: 720px) { #quiz { grid-template-columns:1fr; } .rankings-col { position:static; } .gender-opts { grid-template-columns:1fr 1fr; } }
-  @media (max-width: 480px) { .step { padding:24px 18px; } .size-card { flex-direction:column; } .cta-box { flex-direction:column; } .gender-opts { grid-template-columns:1fr; } }
-  @media (prefers-reduced-motion:reduce) { *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Triathlon Wetsuit Fit Analysis</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: disclosure bar, hero copy beside the measurement form, eight brand fit cards, detail panel for the selected brand, tips, FAQ. Cold-water palette, buoy-orange accent. */
+:root{
+  --bg:#eef1f3; --surface:#ffffff; --fg:#0a0f14; --muted:#4d5a64; --line:#d2d9de;
+  --deep:#0a0f14; --accent:#c8f400; --on-accent:#0a0f14; --accent-ink:#0b4fe0; --pin:#0a0f14; --water:#0b4fe0;
+  --good:#17753f; --warn:#9a5f00; --bad:#b3261e; --track:#dfe5e9;
+  --display:'Barlow Condensed','Arial Narrow',Impact,sans-serif; --body:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#070a0d; --surface:#10161c; --fg:#eef3f6; --muted:#97a4ad; --line:#222d36;
+  --deep:#000000; --accent:#d4ff1a; --on-accent:#0a0f14; --accent-ink:#d4ff1a; --pin:#d4ff1a; --water:#4d94ff;
+  --good:#5fd197; --warn:#f0b34a; --bad:#ff8a80; --track:#1e2a33; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#070a0d; --surface:#10161c; --fg:#eef3f6; --muted:#97a4ad; --line:#222d36;
+  --deep:#000000; --accent:#d4ff1a; --on-accent:#0a0f14; --accent-ink:#d4ff1a; --pin:#d4ff1a; --water:#4d94ff;
+  --good:#5fd197; --warn:#f0b34a; --bad:#ff8a80; --track:#1e2a33; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+.wrap{max-width:1080px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);text-transform:uppercase;letter-spacing:.01em;line-height:1;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.8rem,8vw,5rem)}
+h2{font-size:clamp(2rem,5vw,3rem);margin-bottom:.6rem}
+h3{font-size:1.6rem}
+p{margin:0 0 1rem;max-width:65ch}
+a{color:var(--water)}
+:focus-visible{outline:3px solid var(--water);outline-offset:2px}
+.disclosure{font-size:.82rem;color:var(--muted);padding:10px 0;border-bottom:1px solid var(--line)}
+.eyebrow{font-size:.78rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:1rem}
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:40px;padding-block:48px 40px;align-items:start}
+.hero-copy p{font-size:1.1rem;color:var(--muted)}
+.brands-list{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 0;padding:0;list-style:none}
+.brands-list li{font-family:var(--display);text-transform:uppercase;font-size:1.15rem;letter-spacing:.04em;border:1px solid var(--line);border-radius:4px;padding:3px 10px;background:var(--surface)}
+.finder{background:var(--deep);color:#eaf3f6;border-radius:6px;padding:26px;min-width:0}
+.finder h2{font-size:2rem}
+fieldset{border:0;padding:0;margin:0 0 16px;min-width:0}
+legend{font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;opacity:.75;margin-bottom:8px;padding:0}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opts label{flex:1 1 auto;min-width:0}
+.opts input{position:absolute;opacity:0;pointer-events:none}
+.opts span{display:block;text-align:center;padding:9px 12px;border:1px solid rgba(234,243,246,.3);border-radius:4px;cursor:pointer;font-size:.92rem}
+.opts input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.opts input:focus-visible+span{outline:3px solid #fff;outline-offset:2px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums label{display:block;font-size:.8rem;opacity:.85}
+.nums input{width:100%;margin-top:4px;padding:10px;border-radius:4px;border:1px solid rgba(234,243,246,.3);background:rgba(255,255,255,.08);color:#eaf3f6;font:inherit;font-size:1rem}
+.hint{font-size:.78rem;opacity:.7;margin:8px 0 0;max-width:none}
+details.more summary{font-size:.85rem;opacity:.85;cursor:pointer}
+.btn{display:inline-block;background:var(--accent);color:var(--on-accent);font-weight:600;text-decoration:none;padding:12px 20px;border-radius:4px}
+.btn:hover{filter:brightness(1.08)}
+section{padding-block:48px;border-top:1px solid var(--line)}
+.sub{color:var(--muted);max-width:65ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:20px}
+.bc{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.bc:hover{border-color:var(--water)}
+.bc:focus-visible{outline:3px solid var(--water);outline-offset:2px}
+.bc[aria-pressed="true"]{border-color:var(--water);box-shadow:0 0 0 2px var(--water)}
+.bc .bn{font-family:var(--display);font-size:1.5rem;text-transform:uppercase;line-height:1}
+.bc .bs{font-family:var(--display);font-size:2.6rem;text-transform:uppercase;line-height:1;color:var(--accent-ink)}
+.bc .bc-conf{font-size:.78rem;color:var(--muted)}
+.badge{display:inline-block;align-self:flex-start;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:2px 9px;border-radius:99px;border:1px solid currentColor}
+.b-good{color:var(--good)}.b-warn{color:var(--warn)}.b-bad{color:var(--bad)}
+.detail{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:24px;min-width:0}
+.shot{width:130px;height:170px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow:hidden;color:var(--water)}
+.shot img{width:100%;height:100%;object-fit:contain}
+.shot svg{width:80px;height:auto}
+.dhead{display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center}
+.size-big{font-family:var(--display);font-size:clamp(3rem,10vw,5.5rem);line-height:.9;text-transform:uppercase;color:var(--accent-ink)}
+.size-big small{display:block;font-family:var(--body);font-size:.75rem;letter-spacing:.12em;color:var(--muted);font-weight:600;margin-bottom:6px}
+.dhead p{margin:8px 0 0;color:var(--muted);font-size:.95rem}
+.warnbox{margin-top:16px;padding:12px 14px;border-radius:4px;border:1px solid var(--warn);color:var(--fg);font-size:.9rem}
+.gauges{margin-top:22px;display:grid;gap:18px}
+.row{display:flex;justify-content:space-between;gap:12px;font-size:.88rem;flex-wrap:wrap}
+.row span:last-child{color:var(--muted)}
+.track{position:relative;height:12px;background:var(--track);border-radius:6px;margin-top:8px}
+.band{position:absolute;top:0;bottom:0;background:var(--water);opacity:.55;border-radius:6px}
+.pin{position:absolute;top:-5px;width:4px;height:22px;background:var(--pin);border-radius:2px;margin-left:-2px}
+.ranks{display:grid;gap:8px;margin-top:8px}
+.rk{display:grid;grid-template-columns:2.6rem 1fr auto;gap:14px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:4px;min-width:0}
+.rk b{font-family:var(--display);font-size:1.5rem}
+.why{font-size:.85rem;color:var(--muted)}
+.suit{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.suit .tag{font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--water)}
+.suit p{margin:4px 0 14px;color:var(--muted);font-size:.95rem}
+.tips{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:20px}
+.tips div{min-width:0}
+.tips h3{font-size:1.4rem;margin-bottom:6px}
+.tips p{font-size:.95rem;color:var(--muted)}
+details.faq{border-bottom:1px solid var(--line);padding:14px 0}
+details.faq summary{cursor:pointer;font-weight:600}
+details.faq p{margin:10px 0 0;color:var(--muted)}
+.best{background:var(--deep);color:#eef3f6;border-radius:6px;padding:26px;margin-top:20px}
+.best .eyebrow{color:var(--accent);margin-bottom:.5rem}
+.best-title{font-family:var(--display);text-transform:uppercase;font-size:clamp(2.6rem,8vw,4.4rem);line-height:.95;color:var(--accent)}
+.best p{margin:10px 0 0;color:#c4ced5;max-width:60ch}
+.best h3{font-size:1.2rem;margin:20px 0 8px;color:#eef3f6}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid rgba(238,243,246,.35);border-radius:99px;padding:6px 14px;font-size:.9rem;color:#eef3f6}
+.chip:hover{border-color:var(--accent)}
+.chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chip b{font-family:var(--display);font-size:1.15rem;text-transform:uppercase;letter-spacing:.03em;margin-right:6px}
+.chip.dim{opacity:.7}
+.bc .tagtop{font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--good)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.9rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+td:not(:first-child):not(:last-child),th:not(:first-child):not(:last-child){text-align:center}
+td:first-child{font-weight:600}
+.tblwrap{overflow-x:auto;margin-top:16px}
+footer{font-size:.8rem;color:var(--muted);padding-block:0 40px}
+@media (max-width:860px){.hero{grid-template-columns:1fr}.tips{grid-template-columns:1fr}}
+@media (max-width:520px){.dhead{grid-template-columns:1fr;gap:12px}.nums{grid-template-columns:1fr 1fr}.rk{grid-template-columns:2.4rem 1fr}.rk .badge{grid-column:2}}
 </style>
 </head>
 <body>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-badge">Free · Independent · Unbiased</div>
-  <h1>Find your <em>perfect</em> Zone3 wetsuit in 2 minutes</h1>
-  <p>Answer a few questions and watch the rankings update in real time as our advisor weighs your answers.</p>
-  <button class="btn-primary" onclick="document.getElementById('quiz').scrollIntoView({behavior:'smooth'})">Start the advisor →</button>
-  <div class="trust-row">
-    <span><span class="trust-dot"></span> Official Zone3 sizing charts</span>
-    <span><span class="trust-dot"></span> All models compared</span>
-    <span><span class="trust-dot"></span> Updates after every question</span>
-  </div>
-</section>
+<div class="disclosure"><div class="wrap">Affiliate disclosure: links on this page go to the brands' sites. If you buy through them, I earn a commission at no extra cost to you.</div></div>
 
-<!-- QUIZ -->
-<section id="quiz">
-  <div class="q-col">
-    <div class="progress-bar-track"><div class="progress-bar-fill" id="progress" style="width:0%"></div></div>
-
-    <!-- STEP 1: Gender -->
-    <div class="step active" id="step-1">
-      <div class="step-label">Step 1 of 9 — About you</div>
-      <h2>Which sizing range applies to you?</h2>
-      <p class="hint">Zone3 uses separate sizing charts for men's and women's cuts — this determines which table we use.</p>
-      <div class="gender-opts">
-        <label class="gender-opt" onclick="pickGender('male')">
-          <input type="radio" name="gender" value="male">
-          <div class="gender-icon">👨</div>
-          <strong>Men's</strong>
-          <small>Men's cut wetsuits</small>
-        </label>
-        <label class="gender-opt" onclick="pickGender('female')">
-          <input type="radio" name="gender" value="female">
-          <div class="gender-icon">👩</div>
-          <strong>Women's</strong>
-          <small>Women's cut wetsuits</small>
-        </label>
-      </div>
-      <div class="nav-row"><span></span><button class="btn-next" id="next-1" onclick="goTo('1b')" disabled>Continue →</button></div>
+<main class="wrap">
+  <header class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">Wetsuit best fit analysis</div>
+      <h1>Which brand and size fits your body?</h1>
+      <p>Every wetsuit brand sizes differently. Your Medium at one brand is a Small Tall at another. Enter your measurements once and see your size, and how well it fits, across eight triathlon wetsuit brands.</p>
+      <ul class="brands-list" aria-label="Brands covered"><li>Zone3</li><li>Orca</li><li>Sailfish</li><li>Blueseventy</li><li>HUUB</li><li>ROKA</li><li>2XU</li><li>TYR</li></ul>
     </div>
 
-    <!-- STEP 1b: Country -->
-    <div class="step" id="step-1b">
-      <div class="step-label">Step 2 of 10 — Your location</div>
-      <h2>Where are you based?</h2>
-      <p class="hint">We use this to show prices in your local currency throughout the advisor.</p>
-      <select class="country-select" id="country-select" onchange="pickCountry(this.value)">
-        <option value="" disabled selected>Select your country…</option>
-        <optgroup label="Europe">
-          <option value="GB">United Kingdom (GBP £)</option>
-          <option value="FR">France (EUR €)</option>
-          <option value="DE">Germany (EUR €)</option>
-          <option value="ES">Spain (EUR €)</option>
-          <option value="IT">Italy (EUR €)</option>
-          <option value="NL">Netherlands (EUR €)</option>
-          <option value="BE">Belgium (EUR €)</option>
-          <option value="PT">Portugal (EUR €)</option>
-          <option value="CH">Switzerland (CHF)</option>
-          <option value="SE">Sweden (SEK)</option>
-          <option value="NO">Norway (NOK)</option>
-          <option value="DK">Denmark (DKK)</option>
-          <option value="IE">Ireland (EUR €)</option>
-          <option value="AT">Austria (EUR €)</option>
-          <option value="PL">Poland (PLN)</option>
-        </optgroup>
-        <optgroup label="North America">
-          <option value="US">United States (USD $)</option>
-          <option value="CA">Canada (CAD $)</option>
-        </optgroup>
-        <optgroup label="Asia Pacific">
-          <option value="AU">Australia (AUD $)</option>
-          <option value="NZ">New Zealand (NZD $)</option>
-          <option value="JP">Japan (JPY ¥)</option>
-        </optgroup>
-        <optgroup label="Other">
-          <option value="OTHER">Other</option>
-        </optgroup>
-      </select>
-      <div style="margin-bottom:24px;">
-        <p style="font-size:13px;font-weight:500;color:var(--ink-60);margin-bottom:10px;">Measurement units</p>
-        <div style="display:flex;gap:10px;">
-          <button type="button" id="unit-metric" onclick="pickUnit('metric')" style="flex:1;border:1.5px solid var(--water);border-radius:8px;padding:11px 16px;cursor:pointer;background:var(--water-lt);font-weight:600;font-size:14px;font-family:inherit;transition:background .15s,border-color .15s;">cm / kg</button>
-          <button type="button" id="unit-imperial" onclick="pickUnit('imperial')" style="flex:1;border:1.5px solid var(--ink-30);border-radius:8px;padding:11px 16px;cursor:pointer;background:var(--foam);font-size:14px;font-family:inherit;font-weight:normal;transition:background .15s,border-color .15s;">in / lbs</button>
+    <form class="finder" id="finder" aria-labelledby="ft" novalidate>
+      <h2 id="ft">Your measurements</h2>
+      <fieldset><legend>Suit cut</legend>
+        <div class="opts">
+          <label><input type="radio" name="sex" value="m" checked><span>Men's</span></label>
+          <label><input type="radio" name="sex" value="w"><span>Women's</span></label>
+        </div></fieldset>
+      <fieldset><legend>Units</legend>
+        <div class="opts">
+          <label><input type="radio" name="unit" value="metric" checked><span>cm / kg</span></label>
+          <label><input type="radio" name="unit" value="imp"><span>in / lb</span></label>
+        </div></fieldset>
+      <fieldset><legend>Body</legend>
+        <div class="nums">
+          <label for="h">Height <span id="hu">(cm)</span><input id="h" type="number" inputmode="decimal" value="180" min="1"></label>
+          <label for="w">Weight <span id="wu">(kg)</span><input id="w" type="number" inputmode="decimal" value="80" min="1"></label>
+          <label for="c"><span id="cl">Chest</span> <span id="cu">(cm)</span><input id="c" type="number" inputmode="decimal" value="105" min="1"></label>
+          <label for="wa">Waist <span id="wau">(cm)</span><input id="wa" type="number" inputmode="decimal" value="84" min="1"></label>
+          <label for="hp" id="hpl">Hip <span id="hpu">(cm)</span><input id="hp" type="number" inputmode="decimal" value="100" min="1"></label>
         </div>
-      </div>
-      <div class="nav-row">
-        <button class="btn-back" onclick="goTo(1)">← Back</button>
-        <button class="btn-next" id="next-1b" onclick="goTo(2)" disabled>Continue →</button>
-      </div>
+        <p class="hint">Prefilled with example numbers; replace them with yours. Chest is used by Zone3, Orca and 2XU. Waist and hip are used by 2XU and TYR (TYR sizes by chest, waist and hip only). The other charts use height and weight, so extra measurements are simply ignored for them. See how to measure below.</p>
+      </fieldset>
+      <details class="more"><summary>Add fit details</summary>
+        <fieldset style="margin-top:12px"><legend>Torso length for your height</legend>
+          <div class="opts">
+            <label><input type="radio" name="torso" value="short"><span>Short</span></label>
+            <label><input type="radio" name="torso" value="avg" checked><span>Average</span></label>
+            <label><input type="radio" name="torso" value="long"><span>Long</span></label>
+          </div></fieldset>
+      </details>
+      <details class="more" style="margin-top:12px"><summary>Also suggest a suit level</summary>
+        <fieldset style="margin-top:12px"><legend>Swim level</legend>
+          <div class="opts">
+            <label><input type="radio" name="exp" value="new" checked><span>New</span></label>
+            <label><input type="radio" name="exp" value="reg"><span>Regular</span></label>
+            <label><input type="radio" name="exp" value="race"><span>Competitive</span></label>
+          </div></fieldset>
+        <fieldset><legend>Budget</legend>
+          <div class="opts">
+            <label><input type="radio" name="bud" value="low" checked><span>Value</span></label>
+            <label><input type="radio" name="bud" value="mid"><span>Mid</span></label>
+            <label><input type="radio" name="bud" value="high"><span>No limit</span></label>
+          </div></fieldset>
+        <fieldset><legend>Water temperature</legend>
+          <div class="opts">
+            <label><input type="radio" name="temp" value="cold"><span>Under 14 °C</span></label>
+            <label><input type="radio" name="temp" value="cool" checked><span>14–18 °C</span></label>
+            <label><input type="radio" name="temp" value="warm"><span>Over 18 °C</span></label>
+          </div></fieldset>
+      </details>
+    </form>
+  </header>
+
+  <section id="analysis" aria-live="polite">
+    <div class="eyebrow">Your analysis</div>
+    <h2>Fit across eight brands</h2>
+    <p class="sub">Closest fit first. Select a brand for the full breakdown. The label under each size shows where the brand's chart came from.</p>
+    <div id="best" class="best"></div>
+    <div id="cards" class="cards"></div>
+    <div id="detail" class="detail"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Accuracy</div>
+    <h2>What each brand's chart really measures</h2>
+    <p class="sub">A fit tool is only as precise as the chart behind it. This table shows which measurements each brand's chart uses. When a brand doesn't publish a measurement, this page ignores it instead of guessing.</p>
+    <div class="tblwrap"><table id="cov"></table></div>
+    <h3 style="margin:36px 0 4px">How to measure</h3>
+    <div class="tips">
+      <div><h3>Height</h3><p>Barefoot, back to a wall, heels together, looking straight ahead.</p></div>
+      <div><h3>Weight</h3><p>Use your current weight, ideally first thing in the morning without shoes.</p></div>
+      <div><h3>Chest</h3><p>Tape level under the armpits across the fullest part of the chest, arms relaxed. Women: bust at the fullest point.</p></div>
+      <div><h3>Waist</h3><p>At the narrowest part of your torso, around navel height, tape snug but not squeezing.</p></div>
+      <div><h3>Hip</h3><p>Around the fullest part of the hips and seat, feet together. Used by 2XU women's and TYR.</p></div>
+      <div><h3>Torso</h3><p>Do suits usually feel short or long on you for your height? Only shapes the advice. No chart uses it.</p></div>
     </div>
+  </section>
 
-    <!-- STEP 3: Measurements -->
-    <div class="step" id="step-2">
-      <div class="step-label">Step 3 of 10 — Body measurements</div>
-      <h2>Tell us about your body</h2>
-      <p class="hint" id="meas-hint">These feed directly into Zone3's official size chart. Chest/bust is the most important measurement.</p>
-      <div class="sizing-note" id="sizing-note-women" style="display:none">
-        <strong>Women's note:</strong> Zone3 offers two women's cuts — the standard range (Agile, Aspire, Vision, Vanquish-X) and the Active-Flex. We'll factor this into your results.
-      </div>
-      <div class="field-group">
-        <div class="field"><label for="height" id="height-label">Height (cm)</label><input type="number" id="height" placeholder="e.g. 178"></div>
-        <div class="field"><label for="weight" id="weight-label">Weight (kg)</label><input type="number" id="weight" placeholder="e.g. 74"></div>
-        <div class="field">
-          <div class="label-row">
-            <label for="chest" id="chest-label">Chest (cm)</label>
-            <button class="help-btn" onclick="openMeasureModal(event)" title="How to measure">?</button>
-          </div>
-          <input type="number" id="chest" placeholder="e.g. 92">
-        </div>
-      </div>
-      <div class="nav-row"><button class="btn-back" onclick="goTo('1b')">← Back</button><button class="btn-next" onclick="step2Next()">Continue →</button></div>
+  <section>
+    <div class="eyebrow">Trying it on</div>
+    <h2>Three fit checks when it arrives</h2>
+    <div class="tips">
+      <div><h3>Firm on land</h3><p>A triathlon wetsuit feels tighter than anything else you've worn in the water. You should still take a full breath. If you can't, size up.</p></div>
+      <div><h3>No loose neoprene</h3><p>Pinch the torso and thighs. Loose material or air pockets at the lower back mean the suit is too big and will pump water.</p></div>
+      <div><h3>Check the shoulders</h3><p>Raise your arms in a freestyle motion. Dragging at the shoulders or a choking collar points to another size or cut.</p></div>
     </div>
+  </section>
 
-    <!-- STEP 3: Pace -->
-    <div class="step" id="step-3">
-      <div class="step-label">Step 4 of 10 — Swimming ability</div>
-      <h2>What's your comfortable 100m swim pace?</h2>
-      <p class="hint">Determines how much hydrodynamics and shoulder freedom matter for you.</p>
-      <div class="options">
-        <label class="opt" onclick="pick('pace','fast',3)"><input type="radio" name="pace" value="fast"><div class="opt-icon">⚡</div><div class="opt-text"><strong>Under 1:30 / 100m</strong><small>Competitive swimmer or experienced triathlete</small></div></label>
-        <label class="opt" onclick="pick('pace','moderate',3)"><input type="radio" name="pace" value="moderate"><div class="opt-icon">🌊</div><div class="opt-text"><strong>1:30 – 1:50 / 100m</strong><small>Solid swimmer, comfortable in open water</small></div></label>
-        <label class="opt" onclick="pick('pace','beginner',3)"><input type="radio" name="pace" value="beginner"><div class="opt-icon">🏊</div><div class="opt-text"><strong>1:50 – 2:10 / 100m</strong><small>Developing swimmer, focus on completion</small></div></label>
-        <label class="opt" onclick="pick('pace','new',3)"><input type="radio" name="pace" value="new"><div class="opt-icon">🔰</div><div class="opt-text"><strong>2:10+ / 100m or unsure</strong><small>New to triathlon or open water</small></div></label>
-      </div>
-      <div class="nav-row"><button class="btn-back" onclick="goTo(2)">← Back</button><button class="btn-next" id="next-3" onclick="goTo(4)" disabled>Continue →</button></div>
-    </div>
+  <section>
+    <div class="eyebrow">Questions</div>
+    <h2>Common questions</h2>
+    <details class="faq"><summary>How does the fit score work?</summary><p>Each of your measurements is compared with each size's range on the brand's chart. A measurement inside the range costs nothing. One outside it costs more the further out it is. Chest counts most, then weight, then height and waist, then hip. A measurement a chart doesn't publish is skipped, and each brand shows a confidence level based on how many of your measurements its chart can use and how reliable its chart source is. The lowest total wins.</p></details>
+    <details class="faq"><summary>What if I fall between two sizes?</summary><p>Read the ranked sizes and the brand's own advice. 2XU, ROKA and Blueseventy suggest the smaller size when you fit two. HUUB suggests going up and says weight matters more than height. Zone3's "Tall" and "Medium Large" cuts are there for builds that don't match the standard sizes.</p></details>
+    <details class="faq"><summary>Why do some brands show a warning?</summary><p>Sailfish and HUUB publish their official charts only as images that I could not read, so those two use retailer charts. ROKA publishes a height-by-weight grid, so its ranges here are approximate. Always confirm on the brand's own chart before ordering.</p></details>
+    <details class="faq"><summary>Can I return a suit that doesn't fit?</summary><p>Returns are set by each brand or seller. Zone3 states an exchange policy on its sizing page. Read the current policy before you order.</p></details>
+  </section>
 
-    <!-- STEP 4: OW experience -->
-    <div class="step" id="step-4">
-      <div class="step-label">Step 5 of 10 — Open water experience</div>
-      <h2>How much open water swimming have you done?</h2>
-      <p class="hint">Affects whether feel or float matters more in your suit.</p>
-      <div class="options">
-        <label class="opt" onclick="pick('ow','lots',4)"><input type="radio" name="ow" value="lots"><div class="opt-icon">🏅</div><div class="opt-text"><strong>Many races and training sessions</strong><small>Open water is my comfort zone</small></div></label>
-        <label class="opt" onclick="pick('ow','some',4)"><input type="radio" name="ow" value="some"><div class="opt-icon">🌅</div><div class="opt-text"><strong>A few races or sessions</strong><small>Getting comfortable out there</small></div></label>
-        <label class="opt" onclick="pick('ow','little',4)"><input type="radio" name="ow" value="little"><div class="opt-icon">🤿</div><div class="opt-text"><strong>Tried it once or twice</strong><small>Still building confidence</small></div></label>
-        <label class="opt" onclick="pick('ow','none',4)"><input type="radio" name="ow" value="none"><div class="opt-icon">🏊</div><div class="opt-text"><strong>Never swum in open water</strong><small>First time will be race day</small></div></label>
-      </div>
-      <div class="nav-row"><button class="btn-back" onclick="goTo(3)">← Back</button><button class="btn-next" id="next-4" onclick="goTo(5)" disabled>Continue →</button></div>
-    </div>
-
-    <!-- STEP 5: Distance -->
-    <div class="step" id="step-5">
-      <div class="step-label">Step 6 of 10 — Race goals</div>
-      <h2>What distance are you racing?</h2>
-      <p class="hint">Sprint races reward transitions; Ironman rewards sustained buoyancy and shoulder endurance.</p>
-      <div class="options">
-        <label class="opt" onclick="pick('dist','sprint',5)"><input type="radio" name="dist" value="sprint"><div class="opt-icon">🏃</div><div class="opt-text"><strong>Sprint / Olympic</strong><small>Up to 1.5km swim</small></div></label>
-        <label class="opt" onclick="pick('dist','half',5)"><input type="radio" name="dist" value="half"><div class="opt-icon">🚴</div><div class="opt-text"><strong>70.3 / Half Iron</strong><small>1.9km swim</small></div></label>
-        <label class="opt" onclick="pick('dist','full',5)"><input type="radio" name="dist" value="full"><div class="opt-icon">🔱</div><div class="opt-text"><strong>Full Ironman</strong><small>3.8km swim</small></div></label>
-        <label class="opt" onclick="pick('dist','openwater',5)"><input type="radio" name="dist" value="openwater"><div class="opt-icon">🌊</div><div class="opt-text"><strong>Open water / swimrun</strong><small>Not a triathlon race</small></div></label>
-      </div>
-      <div class="nav-row"><button class="btn-back" onclick="goTo(4)">← Back</button><button class="btn-next" id="next-5" onclick="goTo(6)" disabled>Continue →</button></div>
-    </div>
-
-    <!-- STEP 6: Temperature -->
-    <div class="step" id="step-6">
-      <div class="step-label">Step 7 of 10 — Conditions</div>
-      <h2>How warm is the water you'll race in?</h2>
-      <p class="hint">Neoprene thickness and thermal lining choices depend on this.</p>
-      <div class="options">
-        <label class="opt" onclick="pick('temp','cold',6)"><input type="radio" name="temp" value="cold"><div class="opt-icon">🧊</div><div class="opt-text"><strong>Cold — under 16°C / 61°F</strong><small>Thermal lining essential</small></div></label>
-        <label class="opt" onclick="pick('temp','cool',6)"><input type="radio" name="temp" value="cool"><div class="opt-icon">💧</div><div class="opt-text"><strong>Cool — 16–20°C / 61–68°F</strong><small>Standard UK/EU race conditions</small></div></label>
-        <label class="opt" onclick="pick('temp','mild',6)"><input type="radio" name="temp" value="mild"><div class="opt-icon">☀️</div><div class="opt-text"><strong>Mild — 20–24°C / 68–75°F</strong><small>Flexibility matters more than warmth</small></div></label>
-        <label class="opt" onclick="pick('temp','warm',6)"><input type="radio" name="temp" value="warm"><div class="opt-icon">🔆</div><div class="opt-text"><strong>Warm — over 24°C / 75°F</strong><small>Heat management is the priority</small></div></label>
-      </div>
-      <div class="nav-row"><button class="btn-back" onclick="goTo(5)">← Back</button><button class="btn-next" id="next-6" onclick="goTo(7)" disabled>Continue →</button></div>
-    </div>
-
-    <!-- STEP 7: Budget -->
-    <div class="step" id="step-7">
-      <div class="step-label">Step 8 of 10 — Budget</div>
-      <h2>What's your budget?</h2>
-      <p class="hint">The right suit for your level matters more than the most expensive option.</p>
-      <div class="options">
-        <label class="opt" onclick="pick('budget','low',7)"><input type="radio" name="budget" value="low"><div class="opt-icon">💰</div><div class="opt-text"><strong id="blbl-low">Under £200 / €230</strong><small>Entry-level, first wetsuit</small></div></label>
-        <label class="opt" onclick="pick('budget','mid',7)"><input type="radio" name="budget" value="mid"><div class="opt-icon">💳</div><div class="opt-text"><strong id="blbl-mid">£200–350 / €230–400</strong><small>Good value performance</small></div></label>
-        <label class="opt" onclick="pick('budget','high',7)"><input type="radio" name="budget" value="high"><div class="opt-icon">🏆</div><div class="opt-text"><strong id="blbl-high">£350–550 / €400–640</strong><small>Serious age-grouper range</small></div></label>
-        <label class="opt" onclick="pick('budget','premium',7)"><input type="radio" name="budget" value="premium"><div class="opt-icon">⚡</div><div class="opt-text"><strong id="blbl-premium">£550+ / €640+</strong><small>No compromise</small></div></label>
-      </div>
-      <div class="nav-row"><button class="btn-back" onclick="goTo(6)">← Back</button><button class="btn-next" id="next-7" onclick="goTo(8)" disabled>Continue →</button></div>
-    </div>
-
-    <!-- STEP 8: Flexibility -->
-    <div class="step" id="step-8">
-      <div class="step-label">Step 9 of 10 — Flexibility</div>
-      <h2>How is your shoulder and upper-body flexibility?</h2>
-      <p class="hint">Tighter shoulders benefit from super-stretch panelled neoprene — this directly affects the ranking.</p>
-      <div class="options">
-        <label class="opt" onclick="pick('flex','excellent',8)"><input type="radio" name="flex" value="excellent"><div class="opt-icon">🧘</div><div class="opt-text"><strong>Excellent flexibility</strong><small>No restriction in overhead reach</small></div></label>
-        <label class="opt" onclick="pick('flex','good',8)"><input type="radio" name="flex" value="good"><div class="opt-icon">💪</div><div class="opt-text"><strong>Good, but not extreme</strong><small>Typical range of motion</small></div></label>
-        <label class="opt" onclick="pick('flex','limited',8)"><input type="radio" name="flex" value="limited"><div class="opt-icon">🤷</div><div class="opt-text"><strong>Limited flexibility</strong><small>Stiffness or restriction in shoulders</small></div></label>
-      </div>
-      <div class="nav-row"><button class="btn-back" onclick="goTo(7)">← Back</button><button class="btn-next" id="next-8" onclick="goTo(9)" disabled>Continue →</button></div>
-    </div>
-
-    <!-- STEP 9: Priority -->
-    <div class="step" id="step-9">
-      <div class="step-label">Step 10 of 10 — Your priority</div>
-      <h2>What matters most to you in a wetsuit?</h2>
-      <p class="hint">No wrong answer. This weights the final scores.</p>
-      <div class="options">
-        <label class="opt" onclick="pick('priority','speed',9)"><input type="radio" name="priority" value="speed"><div class="opt-icon">🚀</div><div class="opt-text"><strong>Speed & hydrodynamics</strong><small>Every second counts</small></div></label>
-        <label class="opt" onclick="pick('priority','comfort',9)"><input type="radio" name="priority" value="comfort"><div class="opt-icon">😌</div><div class="opt-text"><strong>Comfort & confidence</strong><small>I want to feel relaxed in the water</small></div></label>
-        <label class="opt" onclick="pick('priority','value',9)"><input type="radio" name="priority" value="value"><div class="opt-icon">🎯</div><div class="opt-text"><strong>Best value for money</strong><small>Maximum quality per pound/dollar</small></div></label>
-        <label class="opt" onclick="pick('priority','buoyancy',9)"><input type="radio" name="priority" value="buoyancy"><div class="opt-icon">🛟</div><div class="opt-text"><strong>Buoyancy & ease</strong><small>I want to float as much as possible</small></div></label>
-      </div>
-      <div class="nav-row"><button class="btn-back" onclick="goTo(8)">← Back</button><button class="btn-next" id="next-9" onclick="showResults()" disabled>See my results →</button></div>
-    </div>
-
-  </div><!-- /q-col -->
-
-  <!-- RIGHT: live rankings -->
-  <div class="rankings-col">
-    <div class="rankings-panel">
-      <h3>Zone3 Rankings</h3>
-      <p class="rankings-meta" id="rankings-meta">Updates after each question</p>
-      <div id="rankings-body">
-        <div class="rank-placeholder">
-          <div class="icon">🏊</div>
-          <p>Answer the first question to see live rankings</p>
-        </div>
-      </div>
-      <hr class="rank-divider">
-      <p class="rankings-note">Rankings shift in real time as you answer. Final results include your recommended size and full reasoning per model.</p>
-    </div>
-  </div>
-
-</section>
-
-<!-- RESULTS -->
-<section id="results">
-  <div class="results-header">
-    <div class="results-badge">Analysis complete</div>
-    <h2 id="res-headline">Your best-matched wetsuit</h2>
-    <p id="res-subline"></p>
-  </div>
-
-  <div class="size-card">
-    <div class="size-badge" id="size-badge">—</div>
-    <div class="size-text">
-      <strong id="size-label">Recommended size</strong>
-      <p id="size-reason"></p>
-      <span class="size-tag" id="size-priority-tag">Chest-priority sizing</span>
-    </div>
-  </div>
-
-  <div class="confidence-row">
-    <span class="conf-pill" id="conf-pill">Confidence: —</span>
-    <span id="conf-text"></span>
-  </div>
-
-  <div id="match-cards"></div>
-
-  <div class="discount-toggle-wrap">
-    <button class="discount-toggle" id="discount-toggle" onclick="toggleDiscount()">
-      <span class="discount-toggle-icon">🏷</span>
-      <span>Get 20% off at Zone3</span>
-      <span class="discount-toggle-chevron" id="disc-chevron">▼</span>
-    </button>
-    <div class="discount-panel" id="discount-panel">
-      <p>Zone3 have partnered with us to offer WetsuitIQ users an exclusive discount. Click below to shop — the 20% is applied automatically at checkout.</p>
-      <a class="btn-primary" href="https://zone3.avln.me/c/NckluOBEQnvA" target="_blank" rel="noopener">Shop Zone3 with 20% off →</a>
-    </div>
-  </div>
-  <div class="restart-row">
-    <button class="btn-restart" onclick="restart()">↩ Start over with different answers</button>
-  </div>
-</section>
-
-<footer>WetsuitIQ — Independent wetsuit advice for triathletes. Sizing based on official Zone3 size charts. Not affiliated with Zone3.</footer>
+  <footer>I'm an independent reviewer and not affiliated with any brand shown. Size charts are copied from brand and retailer pages and can change; this is a guide and cannot replace trying a suit on. Water-temperature guidance is general and not a safety guarantee. Always swim with a buddy or safety cover.</footer>
+</main>
 
 <script>
-// ── SIZING TABLES ─────────────────────────────────────────────────
-// Men's: [hMin, hMax, wMin, wMax, cMin, cMax, size]
-const MEN_SIZES = [
-  [163,173, 55,65,  79, 91,  'Small'],
-  [170,178, 62,70,  89, 97,  'Small Medium'],
-  [175,191, 64,72,  89, 97,  'Small Tall'],
-  [173,183, 68,74,  97,102,  'Medium'],
-  [175,191, 68,78,  97,102,  'Medium Tall'],
-  [173,188, 75,82, 102,107,  'Medium Large'],
-  [178,191, 82,92, 107,112,  'Large'],
-  [183,196, 92,100,112,122,  'X Large'],
-  [183,196, 97,115,117,127,  'XX Large'],
-];
-
-// Women's standard (Agile, Advance, Aspire, Vanquish-X, Vision)
-const WOMEN_STD_SIZES = [
-  [147,163, 46,53,  79, 84,  'X Small'],
-  [160,168, 54,61,  84, 89,  'Small'],
-  [157,168, 60,70,  91, 97,  'Small Medium'],
-  [170,183, 54,64,  84, 91,  'Small Tall'],
-  [165,178, 60,67,  89, 94,  'Medium'],
-  [165,178, 64,73,  91, 96,  'Medium Large'],
-  [168,183, 68,78,  94, 99,  'Large'],
-  [168,198, 73,83,  99,107,  'X Large'],
-  [168,198, 87,93, 104,109,  'XX Large'],
-];
-
-// Women's Active-Flex
-const WOMEN_AF_SIZES = [
-  [147,165, 46,53,  79, 86,  'Small'],
-  [147,167, 54,61,  81, 91,  'Small Medium'],
-  [147,167, 60,73,  91, 96,  'Short Large'],
-  [147,167, 68,78,  86,102,  'Short X Large'],
-  [160,175, 58,64,  81, 91,  'Medium'],
-  [160,175, 60,73,  86, 96,  'Medium Large'],
-  [160,175, 68,78,  86,102,  'Medium X Large'],
-  [165,180, 60,73,  86, 96,  'Large'],
-  [168,183, 68,78,  91,102,  'X Large'],
-  [168,193, 73,83,  97,107,  'XX Large'],
-];
-
-function calcSize(h, w, c, table, chestLabel) {
-  const byC = table.filter(r => c >= r[4] && c <= r[5]);
-  const byH = table.filter(r => h >= r[0] && h <= r[1]);
-  const byW = table.filter(r => w >= r[2] && w <= r[3]);
-  const votes = {};
-  byC.forEach(r => votes[r[6]] = (votes[r[6]]||0) + 3);
-  byW.forEach(r => votes[r[6]] = (votes[r[6]]||0) + 2);
-  byH.forEach(r => votes[r[6]] = (votes[r[6]]||0) + 1);
-
-  if (!Object.keys(votes).length) {
-    // fallback: nearest by height midpoint
-    const sorted = table.slice().sort((a,b) =>
-      Math.abs((a[0]+a[1])/2 - h) - Math.abs((b[0]+b[1])/2 - h));
-    return { size: sorted[0][6], reason: 'Closest match by height — your measurements are near the edge of the size table. We recommend trying this size and the adjacent one.' };
-  }
-  const winner = Object.entries(votes).sort((a,b) => b[1]-a[1])[0][0];
-  const cSize  = byC[0]?.[6];
-  const hSize  = byH[0]?.[6];
-  const wSize  = byW[0]?.[6];
-  const allSame = cSize === hSize && hSize === wSize;
-  let reason;
-  if (allSame) {
-    reason = `All three measurements (height, weight, ${chestLabel.toLowerCase()}) agree — an unusually clean fit.`;
-  } else if (cSize === winner) {
-    const others = [hSize, wSize].filter(s => s && s !== winner);
-    reason = chestLabel + ' (' + c + 'cm) is the primary factor and lands you in ' + winner + '. ' + (others.length ? 'Height/weight pointed to ' + [...new Set(others)].join(' / ') + ', but chest fit is prioritised for comfort and flexibility.' : '');
-  } else {
-    reason = `Height and weight measurements agree on ${winner}. ${chestLabel} (${c}cm) was also considered.`;
-  }
-  return { size: winner, reason };
-}
-
-// ── SUITS ─────────────────────────────────────────────────────────
-// Scoring dimensions:
-//   pace:     fast(<1:30) | moderate(1:30-1:50) | beginner(1:50-2:10) | new(2:10+)
-//   ow:       lots | some | little | none
-//   dist:     sprint | half | full | openwater
-//   temp:     cold(<16C) | cool(16-20C) | mild(20-24C) | warm(24C+)
-//   budget:   low | mid | high | premium
-//   flex:     excellent | good | limited
-//   priority: speed | comfort | value | buoyancy
-//
-// Zone3 guide data used:
-//   Vanquish-X: Elite/Pro | Speed 5 | Flex 5 | Buoyancy 5 | Endurance 5
-//               Yamamoto #40+#39 | 5mm-0.3mm | X-10 Extreme shoulders
-//               BioRubber | NBR buoyancy | Alpha Titanium+Silk X lining
-//               Sensory Catch Panel | B.R.E chest | Aerodome | $1,345
-//   Aspire:     Competition | Speed 5 | Flex 5 | Buoyancy 4 | Durability 3
-//               B-Prene Yamamoto #39 | M:5mm-1mm W:3mm-1.5mm | X-10 shoulders
-//               Silk X lining | Sensory Catch | Aerodome | $995
-//   Vision:     Performance | Speed 4 | Flex 4 | Buoyancy 4 | Durability 5
-//               B-Prene Yamamoto #39 | M:5mm-1.5mm W:3mm-1.5mm | X-10 shoulders
-//               B.R.E chest (mens) | Aerodome (mens) | 221 reviews | $795
-//   Agile:      Foundation | most accessible | confidence + buoyancy focus
-
-// Men's suits
-const MENS_SUITS = [
-  {
-    id:'vanquish', name:'Vanquish-X', brand:'Zone3', gender:'male',
-    // Elite/Pro tier. Rewards fast swimmers who can exploit the suit.
-    // Penalises beginners hard — they won't feel the difference and it's $1,345.
-    // Excellent flex (X-10 Extreme) but limited-shoulder swimmers still struggle
-    // at speed so don't reward that pairing. BioRubber + NBR = max buoyancy lift
-    // so it genuinely helps endurance athletes over 3.8km. Cold water: Alpha
-    // Titanium lining adds warmth. Speed priority is the clearest signal for this suit.
-    profile:{ base:10,
-      pace:    {fast:7,  moderate:3,  beginner:-3, new:-7},
-      ow:      {lots:5,  some:2,      little:-2,   none:-5},
-      dist:    {sprint:1, half:4,     full:7,      openwater:3},
-      temp:    {cold:3,  cool:4,      mild:3,      warm:2},
-      budget:  {low:-10, mid:-6,      high:0,      premium:7},
-      flex:    {excellent:6, good:2,  limited:-4},
-      priority:{speed:7, comfort:0,   value:-4,    buoyancy:3}
-    },
-    desc:(a)=>{
-      const pace = a.pace==='fast'
-        ? 'At your swim pace, the Yamamoto\u00ae #40 neoprene and 0.3mm panels will give you a measurable speed advantage.'
-        : 'The Vanquish-X is Zone3\'s most technically advanced suit, built for athletes with a refined, efficient stroke.';
-      const feat = 'X-10 Extreme shoulder panels, BioRubber buoyancy mapping and an Alpha Titanium lining make it the most complete suit in the range.';
-      const val = a.budget==='premium'
-        ? 'At $1,345 it is a serious investment, and your budget supports it.'
-        : 'At $1,345 it sits at the top of the market — worth considering whether the Aspire at $995 closes the gap for your level.';
-      return pace + ' ' + feat + ' ' + val;
-    }
-  },
-  {
-    id:'aspire', name:'Aspire', brand:'Zone3', gender:'male',
-    // Competition tier. Speed 5/5 same as Vanquish but buoyancy 4/5.
-    // The sweet spot for serious age-groupers — 5/5 flex, Silk X lining,
-    // Sensory Catch Panel, Aerodome. Works across all distances.
-    // Budget: $995 — mid budget is stretching, high is the natural home,
-    // premium users should at least consider Vanquish.
-    // Limited flex users: X-10 shoulders (not Extreme) still very good.
-    // Durability 3/5 — same as Vanquish, so not a long-term workhorse.
-    profile:{ base:10,
-      pace:    {fast:4,  moderate:6,  beginner:2,  new:-1},
-      ow:      {lots:4,  some:5,      little:2,    none:1},
-      dist:    {sprint:3, half:6,     full:5,      openwater:4},
-      temp:    {cold:3,  cool:5,      mild:4,      warm:2},
-      budget:  {low:-6,  mid:0,       high:6,      premium:3},
-      flex:    {excellent:4, good:6,  limited:3},
-      priority:{speed:5, comfort:5,   value:2,     buoyancy:4}
-    },
-    desc:(a)=>{
-      const flex = a.flex==='limited'
-        ? 'The X-10 shoulder panels give meaningful freedom even with restricted range of motion — a key reason coaches recommend it for athletes who feel constrained in cheaper suits.'
-        : 'X-10 shoulders and the Silk X lining give a 5/5 flexibility rating — the same as the Vanquish-X, at a lower price point.';
-      const dist = a.dist==='full'
-        ? ' The Aerodome buoyancy panel and Sensory Catch surface maintain efficiency across 3.8km.'
-        : a.dist==='half' ? ' Over 1.9km the balance of buoyancy, speed (rated 5/5) and shoulder freedom is hard to beat.' : '';
-      const price = 'At $995 it is Zone3\'s Competition-tier suit — below the Vanquish-X but above the Vision in materials and performance ratings.';
-      return 'Zone3\'s best-balanced competition suit, independently rated 5/5 for both speed and flexibility. ' + flex + dist + ' ' + price;
-    }
-  },
-  {
-    id:'vision', name:'Vision', brand:'Zone3', gender:'male',
-    // Performance tier. Speed 4/5, Flex 4/5, Buoyancy 4/5 — consistent across board.
-    // Durability 5/5 — the only suit with top durability, best for training use too.
-    // 221 reviews — the most-worn suit in the range, proven at all levels.
-    // B.R.E chest panel (mens) + Aerodome (mens) = real buoyancy features at $795.
-    // Best value pick. New/beginner swimmers get most benefit from buoyancy here.
-    // Cold/cool water: 5mm-1.5mm neoprene gives good warmth.
-    // High budget users should consider Aspire. Premium should definitely go Aspire+.
-    profile:{ base:10,
-      pace:    {fast:-2, moderate:2,  beginner:5,  new:6},
-      ow:      {lots:0,  some:3,      little:5,    none:6},
-      dist:    {sprint:5, half:4,     full:2,      openwater:3},
-      temp:    {cold:5,  cool:5,      mild:2,      warm:0},
-      budget:  {low:2,   mid:6,       high:1,      premium:-2},
-      flex:    {excellent:2, good:4,  limited:5},
-      priority:{speed:1, comfort:5,   value:7,     buoyancy:6}
-    },
-    desc:(a)=>{
-      const reviews = 'With 221 verified reviews it is the most-worn suit in the Zone3 range — proven across every ability level.';
-      const dur = 'Its 5/5 durability rating (the highest in the range) also means it holds up to regular training, not just race day.';
-      const val = (a.budget==='low'||a.budget==='mid')
-        ? 'At $795 it includes the B.R.E chest panel and Aerodome buoyancy features typically found in more expensive suits.'
-        : 'At $795, if budget is flexible the Aspire at $995 adds a 5/5 speed and flexibility rating plus the Silk X lining.';
-      const ow = (a.ow==='none'||a.ow==='little')
-        ? ' The consistent 4/5 buoyancy rating lifts your body position immediately, which builds confidence fast in open water.'
-        : '';
-      return 'Zone3\'s Performance-tier suit, rated 4/5 across speed, flexibility, buoyancy and endurance. ' + reviews + ' ' + dur + ' ' + val + ow;
-    }
-  },
-  {
-    id:'agile', name:'Agile', brand:'Zone3', gender:'male',
-    // Foundation tier. Zone3 guide: "confidence-building support", "accessible
-    // flexibility", "balanced buoyancy". Built for developing swimmers and first-timers.
-    // Strongest at Sprint distance — not designed for Ironman loads.
-    // The most flexible in the shoulders of all suits (easiest to put on and move in).
-    // Budget: genuinely the entry point. Mid/high/premium should step up.
-    // Experienced swimmers (lots of OW) should be in Vision at minimum.
-    profile:{ base:10,
-      pace:    {fast:-5, moderate:-1, beginner:4,  new:7},
-      ow:      {lots:-4, some:0,      little:5,    none:7},
-      dist:    {sprint:6, half:2,     full:-3,     openwater:2},
-      temp:    {cold:3,  cool:3,      mild:3,      warm:3},
-      budget:  {low:7,   mid:3,       high:-3,     premium:-6},
-      flex:    {excellent:1, good:3,  limited:6},
-      priority:{speed:-3, comfort:4,  value:7,     buoyancy:4}
-    },
-    desc:(a)=>{
-      const first = (a.ow==='none'||a.ow==='little')
-        ? 'Zone3 describes this as their Foundation suit — built specifically to give developing swimmers confidence and control in open water.'
-        : 'Zone3\'s most accessible suit, designed for the Foundation level swimmer.';
-      const flex = 'It offers the most accessible flexibility in the range, making it easy to get on and to swim in without restriction.';
-      const next = (a.dist==='full')
-        ? ' For a full Ironman distance, the Vision or Aspire would provide more buoyancy endurance support over 3.8km.'
-        : ' When you are ready to step up, the Vision adds a 5/5 durability rating and more refined buoyancy distribution.';
-      return first + ' ' + flex + next;
-    }
-  },
-];
-
-// Women's suits
-const WOMENS_STD_SUITS = [
-  {
-    id:'w-vanquish-x', name:'Vanquish-X', brand:'Zone3', gender:'female',
-    // Same Elite/Pro tier as men's but with women's-specific panelling.
-    // Scoring mirrors men's Vanquish — rewards fast, experienced swimmers.
-    profile:{ base:10,
-      pace:    {fast:7,  moderate:3,  beginner:-3, new:-7},
-      ow:      {lots:5,  some:2,      little:-2,   none:-5},
-      dist:    {sprint:1, half:4,     full:7,      openwater:3},
-      temp:    {cold:3,  cool:4,      mild:3,      warm:2},
-      budget:  {low:-10, mid:-6,      high:0,      premium:7},
-      flex:    {excellent:6, good:2,  limited:-4},
-      priority:{speed:7, comfort:0,   value:-4,    buoyancy:3}
-    },
-    desc:(a)=>{
-      const pace = a.pace==='fast'
-        ? 'At your swim pace the Yamamoto\u00ae #40+#39 neoprene and X-10 Extreme shoulder panels deliver a real speed advantage.'
-        : 'The Vanquish-X is Zone3\'s elite women\'s suit, engineered for athletes who have already refined their open water technique.';
-      return pace + ' Women\'s-specific panelling adds core support and buoyancy lift without compromising the SCS coating hydrodynamics. BioRubber and NBR buoyancy panels are unique to this model in the range. At $1,345 it is the most significant investment — the Aspire at $995 closes much of the performance gap for most swimmers.';
-    }
-  },
-  {
-    id:'w-aspire', name:'Aspire', brand:'Zone3', gender:'female',
-    profile:{ base:10,
-      pace:    {fast:4,  moderate:6,  beginner:2,  new:-1},
-      ow:      {lots:4,  some:5,      little:2,    none:1},
-      dist:    {sprint:3, half:6,     full:5,      openwater:4},
-      temp:    {cold:3,  cool:5,      mild:4,      warm:2},
-      budget:  {low:-6,  mid:0,       high:6,      premium:3},
-      flex:    {excellent:4, good:6,  limited:3},
-      priority:{speed:5, comfort:5,   value:2,     buoyancy:4}
-    },
-    desc:(a)=>{
-      const flex = a.flex==='limited'
-        ? 'The X-10 shoulder panels provide meaningful freedom even with restricted range of motion.'
-        : 'X-10 shoulders and Silk X lining give a 5/5 flexibility rating — matching the Vanquish-X at a lower price.';
-      const dist = a.dist==='half' ? ' Over 1.9km the balance of speed, buoyancy and shoulder freedom is hard to beat at this level.' : '';
-      return 'Zone3\'s Competition-tier women\'s suit, rated 5/5 for both speed and flexibility. ' + flex + dist + ' Women\'s-specific panelling provides core lift and a closer torso fit. At $995 it is the strongest all-round choice for serious age-groupers.';
-    }
-  },
-  {
-    id:'w-vision', name:'Vision', brand:'Zone3', gender:'female',
-    profile:{ base:10,
-      pace:    {fast:-2, moderate:2,  beginner:5,  new:6},
-      ow:      {lots:0,  some:3,      little:5,    none:6},
-      dist:    {sprint:5, half:4,     full:2,      openwater:3},
-      temp:    {cold:5,  cool:5,      mild:2,      warm:0},
-      budget:  {low:2,   mid:6,       high:1,      premium:-2},
-      flex:    {excellent:2, good:4,  limited:5},
-      priority:{speed:1, comfort:5,   value:7,     buoyancy:6}
-    },
-    desc:(a)=>{
-      const val = (a.budget==='low'||a.budget==='mid')
-        ? 'At $795 it is the most proven suit in the Zone3 range by review volume, offering 4/5 across speed, flex, buoyancy and endurance.'
-        : 'At $795, if your budget stretches the Aspire adds a 5/5 speed and flexibility rating with Silk X lining.';
-      const ow = (a.ow==='none'||a.ow==='little') ? ' The consistent buoyancy lift builds body position and open water confidence quickly.' : '';
-      return 'Zone3\'s Performance-tier women\'s suit. ' + val + ow + ' The 5/5 durability rating makes it reliable for both training and racing.';
-    }
-  },
-  {
-    id:'w-agile', name:'Agile', brand:'Zone3', gender:'female',
-    profile:{ base:10,
-      pace:    {fast:-5, moderate:-1, beginner:4,  new:7},
-      ow:      {lots:-4, some:0,      little:5,    none:7},
-      dist:    {sprint:6, half:2,     full:-3,     openwater:2},
-      temp:    {cold:3,  cool:3,      mild:3,      warm:3},
-      budget:  {low:7,   mid:3,       high:-3,     premium:-6},
-      flex:    {excellent:1, good:3,  limited:6},
-      priority:{speed:-3, comfort:4,  value:7,     buoyancy:4}
-    },
-    desc:(a)=>{
-      const next = a.dist==='full'
-        ? ' For a full Ironman distance, the Vision or Aspire would provide more buoyancy endurance support.'
-        : ' When ready to step up, the Vision adds durability and more refined buoyancy distribution.';
-      return 'Zone3\'s Foundation-tier women\'s suit. Built for developing swimmers and first-timers, it prioritises confidence, accessible flexibility and balanced buoyancy.' + next;
-    }
-  },
-  {
-    id:'w-active-flex', name:'Active-Flex', brand:'Zone3', gender:'female',
-    // Women's-specific comfort suit. Not in the main performance comparison —
-    // positioned for swimmers who prioritise ease of movement and comfort
-    // over racing efficiency. Good for warmer water, limited flex, first OW swims.
-    profile:{ base:7,
-      pace:    {fast:-4, moderate:1,  beginner:4,  new:6},
-      ow:      {lots:-2, some:2,      little:5,    none:6},
-      dist:    {sprint:5, half:2,     full:-2,     openwater:5},
-      temp:    {cold:0,  cool:2,      mild:6,      warm:6},
-      budget:  {low:4,   mid:4,       high:-1,     premium:-4},
-      flex:    {excellent:1, good:3,  limited:7},
-      priority:{speed:-3, comfort:7,  value:3,     buoyancy:2}
-    },
-    desc:(a)=>{
-      const temp = (a.temp==='mild'||a.temp==='warm')
-        ? 'Particularly well suited to warmer conditions (20C+) where thicker performance suits can cause overheating.'
-        : 'Designed for maximum ease of movement rather than outright thermal insulation.';
-      const flex = a.flex==='limited'
-        ? ' Swimmers with restricted shoulder movement consistently rate this as the most comfortable option in the Zone3 range.'
-        : '';
-      return 'Zone3\'s women\'s-specific comfort suit, built around freedom of movement rather than racing metrics. ' + temp + flex + ' A strong choice if in-water comfort matters more than marginal speed gains. For performance-focused swimming, the Vision or Aspire would score higher.';
-    }
-  },
-];
-
-// ── CURRENCY ────────────────────────────────────────────────
-const CURRENCY = {
-  GB:    { low:'Under £200',  mid:'£200–350',   high:'£350–550',    premium:'£550+' },
-  US:    { low:'Under $250',   mid:'$250–450',   high:'$450–700',    premium:'$700+' },
-  CA:    { low:'Under CA$330', mid:'CA$330–470', high:'CA$470–750',  premium:'CA$750+' },
-  AU:    { low:'Under A$380',  mid:'A$380–540',  high:'A$540–850',   premium:'A$850+' },
-  NZ:    { low:'Under NZ$420', mid:'NZ$420–590', high:'NZ$590–930',  premium:'NZ$930+' },
-  EU:    { low:'Under €230',  mid:'€230–400',   high:'€400–640',    premium:'€640+' },
-  CH:    { low:'Under CHF 230',mid:'CHF 230–400',high:'CHF 400–630', premium:'CHF 630+' },
-  SE:    { low:'Under 2700 kr',mid:'2700–4700 kr',high:'4700–7400 kr',premium:'7400+ kr' },
-  NO:    { low:'Under 2700 kr',mid:'2700–4800 kr',high:'4800–7500 kr',premium:'7500+ kr' },
-  DK:    { low:'Under 1700 kr',mid:'1700–3000 kr',high:'3000–4700 kr',premium:'4700+ kr' },
-  JP:    { low:'Under ¥40,000', mid:'¥40–70k',   high:'¥70–110k',    premium:'¥110k+' },
-  OTHER: { low:'Under £200 / €230', mid:'£200–350 / €230–400', high:'£350–550 / €400–640', premium:'£550+ / €640+' },
+/* Replace each URL with your own affiliate link for that brand. */
+function inch(rows){return rows.map(function(r){var o=[r[0],null,null,null,null];for(var i=1;i<r.length;i++)o.push(Math.round(r[i]*25.4)/10);return o})}
+var BRANDS = {
+  zone3:{name:'Zone3',link:'https://zone3.avln.me/c/NckluOBEQnvA',conf:'Official Zone3 chart',weak:false,
+    src:"Zone3's size chart for the Agile, Advance, Aspire, Vanquish-X and Vision (women's) and its men's wetsuit chart.",
+    suits:{entry:'Agile',mid:'Vision',top:'Aspire or Vanquish-X'},cold:'Advance Thermal or Thermal Aspire',
+    m:[['Small',163,173,55,65,79,91],['Small Medium',170,178,62,70,89,97],['Small Tall',175,191,64,72,89,97],['Medium',173,183,68,74,97,102],['Medium Tall',175,191,68,78,97,102],['Medium Large',173,188,75,82,102,107],['Large',178,191,82,92,107,112],['X Large',183,196,92,100,112,122],['XX Large',183,196,97,115,117,127]],
+    w:[['X Small',147,163,46,53,79,84],['Small',160,168,54,61,84,89],['Small Medium',157,168,60,70,91,97],['Small Tall',170,183,54,64,84,91],['Medium',165,178,60,67,89,94],['Medium Large',165,178,64,73,91,96],['Large',168,183,68,78,94,99],['X Large',168,198,73,83,99,107],['XX Large',168,198,87,93,104,109]]},
+  orca:{name:'Orca',link:'https://www.orca.com/',conf:'Orca chart via a distributor',weak:false,
+    src:"Orca's one-piece wetsuit chart as published by a distributor. Orca says to go by chest if in doubt.",
+    suits:{entry:'Athlex Float',mid:'Athlex Flex or Flow',top:'Apex'},cold:null,
+    m:[['4',157,170,56,61,85,91],['5',162,170,61,66,90,95],['6',167,175,67,74,95,99],['MT (6T)',177,190,68,76,95,99],['7',173,185,75,82,98,104],['8',180,188,82,89,104,108],['9',185,193,89,97,108,113],['10',190,196,98,109,114,124],['11',193,200,107,122,123,134]],
+    w:[['XS',144,160,46,53,78,83],['S',157,167,54,61,83,89],['M',165,177,60,67,89,94],['L',170,185,66,74,94,99],['XL',177,189,73,79,99,104]]},
+  sailfish:{name:'Sailfish',link:'https://www.sailfish.com/',conf:'Retailer chart, check Sailfish',weak:true,
+    src:"Sailfish's current 2025 chart is an image I could not read, so this is an older retailer chart with no chest column. Sailfish says weight decides in-between sizes.",
+    suits:{entry:'Essential range (Pacific, Atlantic)',mid:'Premium range (Attack, Rocket, Ultimate IPS)',top:'Premium range (Attack, Rocket, Ultimate IPS)'},cold:null,
+    m:[['XS',160,175,60,70,null,null],['S',170,180,63,78,null,null],['M',175,190,78,85,null,null],['L',180,195,85,95,null,null],['XL',185,205,95,105,null,null],['XXL',null,null,105,120,null,null]],
+    w:[['XS',142,156,43,50,null,null],['S',145,165,48,54,null,null],['SM',152,170,52,63,null,null],['M',162,178,57,72,null,null],['L',165,180,73,85,null,null],['XL',165,180,85,100,null,null]]},
+  blueseventy:{name:'Blueseventy',link:'https://www.blueseventy.com/',conf:'Official chart, no chest column',weak:false,
+    src:"Blueseventy's all-sizes chart. It advises sizing down for the Reaction if you fall between sizes.",
+    suits:{entry:'Fusion',mid:'Reaction',top:'Helix'},cold:'Thermal Reaction',
+    m:[['XS',147,160,55,65,null,null],['SM',162,170,64,73,null,null],['SMT',172,185,68,74,null,null],['M',172,185,71,81,null,null],['MT',180,193,72,82,null,null],['ML',175,190,80,88,null,null],['L',180,193,87,98,null,null],['XL',183,200,95,107,null,null],['XXL',183,200,104,120,null,null]],
+    w:[['WXS',139,155,45,51,null,null],['WS',147,160,49,55,null,null],['WMS',152,165,53,60,null,null],['WM',160,175,56,64,null,null],['WML',165,180,63,72,null,null],['WMA (Athena)',160,175,66,76,null,null],['WL',170,183,70,77,null,null],['WLA (Athena)',170,183,75,91,null,null],['WXLA (Athena)',170,183,88,105,null,null]]},
+  huub:{name:'HUUB',link:'https://huubdesign.com/',conf:'Retailer chart, check HUUB',weak:true,
+    src:"HUUB's own chart is an image I could not read, so this uses retailer charts with no chest column. HUUB says weight matters more than height and to go up if between sizes.",
+    suits:{entry:'Aegis X',mid:'Alchemy 3:5',top:'Archimedes IV'},cold:null,
+    m:[['XS',145,160,55,65,null,null],['ST',173,183,59,68,null,null],['S',160,170,64,75,null,null],['SMT',173,183,73,81,null,null],['M',170,185,72,85,null,null],['MT',180,191,73,86,null,null],['ML',178,191,80,90,null,null],['L',180,193,88,100,null,null],['XL',183,203,95,115,null,null],['SS',170,185,88,100,null,null]],
+    w:[['XXS',139,154,41,47,null,null],['XS',143,158,45,51,null,null],['S',146,161,49,55,null,null],['M',151,166,53,60,null,null],['ML',161,176,56,64,null,null],['L',166,181,63,70,null,null],['XL',175,190,70,80,null,null]]},
+  roka:{name:'ROKA',link:'https://rokamultisport.com/',conf:'Approximate, check ROKA grid',weak:true,
+    src:"ROKA publishes a height-by-weight grid, not size ranges. These ranges are rough envelopes taken from that grid, so treat the result as a starting point and confirm on ROKA's grid. No chest column exists.",
+    suits:{entry:null,mid:'Maverick Pro.3',top:'Maverick X.3'},cold:null,
+    m:[['XS',163,173,57,59,null,null],['S',163,175,57,65,null,null],['ST',178,188,57,72,null,null],['M',163,183,63,77,null,null],['MT',183,196,72,84,null,null],['ML',163,180,68,84,null,null],['L',170,185,84,93,null,null],['LT',188,198,82,93,null,null],['XL',173,198,88,102,null,null],['XXL',183,198,100,109,null,null]],
+    w:[['XS',150,160,43,49,null,null],['S',150,163,45,54,null,null],['ST',165,170,48,59,null,null],['SXT',173,178,50,59,null,null],['M',152,168,52,61,null,null],['MT',170,178,59,65,null,null],['MXT',178,183,59,68,null,null],['ML',152,168,54,65,null,null],['L',163,178,63,70,null,null],['LT',178,183,66,74,null,null],['XL',165,178,68,79,null,null],['XXL',175,183,77,84,null,null]]},
+  twoxu:{name:'2XU',link:'https://www.2xu.com/',conf:'Official chart',weak:false,
+    src:"2XU's wetsuit size guide (metric). If you fit more than one size, 2XU advises the smaller one. The men's XS chest figure is left out because it looks like a typo in the source.",
+    suits:{entry:null,mid:'Propel:2',top:'Propel:2'},cold:null,
+    m:[['XS',160,175,58,68,null,null,70,74],['S',160,175,63,70,88,92,75,79],['ST',174,182,64,72,93,97,75,79],['SM',165,175,68,75,95,99,77,81],['M',170,184,72,80,98,102,80,84],['MT',178,193,74,83,98,102,80,84],['MS',168,175,78,88,100,104,82,86],['L',175,188,85,94,103,107,85,89],['LT',180,195,84,94,103,107,85,89],['XL',180,200,92,110,108,112,90,94],['XXL',180,210,105,120,113,117,95,99],['XXXL',180,210,120,135,118,122,100,104]],
+    w:[['XS',145,160,40,50,83,87,63,67,91,95],['S',150,165,47,57,88,92,68,72,96,100],['ST',164,175,47,60,88,92,68,72,96,100],['SM',155,175,55,66,90,94,70,74,98,102],['M',160,175,64,72,93,97,73,77,101,105],['L',165,180,68,80,98,102,78,82,106,110],['XL',170,183,76,88,103,107,83,87,111,115]]},
+  tyr:{name:'TYR',link:'https://tyr.com/collections/mens-wet-suits',conf:'Official chart, body measurements',weak:false,
+    src:"TYR's Hurricane size charts (men's from the Cat 3 page, women's from the Cat 5 page), published in inches and converted to cm. TYR sizes by chest, waist and hip, not height and weight, and its chart also lists a torso loop measurement that this page doesn't collect. TYR says Cat 5 and Cat 3 suits use the same size but Cat 5 fits tighter. Confirm on the product page.",
+    suits:{entry:'Hurricane Cat 1',mid:'Hurricane Cat 3',top:'Hurricane Cat 5'},cold:null,
+    m:inch([['XS',32,35,26,29,33,35],['S',35,38,29,32,35,37],['M',38,41,32,35,37,39],['L',41,44,35,38,39,42],['XL',44,47,38,41,42,45],['2XL',47,50,41,44,45,48],['3XL',50,53,44,47,48,51]]),
+    w:inch([['XXS',28,29.5,22.5,23.5,31,32.5],['XS',30,31.5,24,25,33,34.5],['S',32,33.5,25.5,27,35,36.5],['M',34,35.5,27.5,29,37,38.5],['L',36,37.5,29.5,31,39,40.5],['XL',38,39.5,31.5,32.5,41,42]])}
 };
-const EUR_COUNTRIES = ['FR','DE','ES','IT','NL','BE','PT','IE','AT','PL'];
-function getCurrency(code) {
-  if (EUR_COUNTRIES.includes(code)) return CURRENCY.EU;
-  return CURRENCY[code] || CURRENCY.OTHER;
+/* Wetsuit photos. Add a licensed image per brand (for example from your affiliate program's creatives) as a path or URL.
+   On a claude.ai artifact, images must be published alongside the page; on your own site any URL works. Empty = generic illustration. */
+var IMAGES={zone3:'',orca:'',sailfish:'',blueseventy:'',huub:'',roka:'',twoxu:'',tyr:''};
+var GENERIC='<svg viewBox="0 0 120 200" role="img" aria-label="Generic triathlon wetsuit illustration" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M45 10Q60 24 75 10L95 18L112 70L98 74L88 42L86 100L90 190L66 190L60 112L54 190L30 190L34 100L32 42L22 74L8 70L25 18Z" fill="currentColor" fill-opacity=".15"/><path d="M60 24V92M34 100H86" stroke-width="2.5"/></svg>';
+function shot(k){
+  var w=el('div','shot'),src=IMAGES[k];
+  var fallback=function(){w.innerHTML=GENERIC};
+  if(src){var i=document.createElement('img');i.src=src;i.alt=BRANDS[k].name+' triathlon wetsuit';i.loading='lazy';i.onerror=fallback;w.appendChild(i)}else fallback();
+  return w;
 }
-function updateBudgetLabels() {
-  const cur = getCurrency(ans.country || 'OTHER');
-  const rows = ['low','mid','high','premium'];
-  rows.forEach(function(k) {
-    const el = document.getElementById('blbl-' + k);
-    if (el) el.textContent = cur[k];
+var ORDER=['zone3','orca','sailfish','blueseventy','huub','roka','twoxu','tyr'];
+var TIER={'new':{low:'entry',mid:'entry',high:'mid'},'reg':{low:'entry',mid:'mid',high:'top'},'race':{low:'mid',mid:'top',high:'top'}};
+var sel='zone3',picked=false;
+var $=function(id){return document.getElementById(id)};
+function val(n){var e=document.querySelector('input[name="'+n+'"]:checked');return e?e.value:null}
+function num(id){var v=parseFloat($(id).value);return isFinite(v)&&v>0?v:null}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+function r1(x){return Math.round(x*10)/10}
+
+/* Distance outside a range as a share of range width; 0 when inside or when the chart has no value. */
+function miss(v,lo,hi){if(v==null||lo==null||hi==null)return 0;var w=Math.max(hi-lo,1);return v<lo?(lo-v)/w:v>hi?(v-hi)/w:0}
+function ctr(v,lo,hi){if(v==null||lo==null||hi==null)return 0;return Math.abs(v-(lo+hi)/2)/Math.max(hi-lo,1)}
+/* Each measure: [key, low column, high column, weight in the score, unit, label]. Chest counts most, then weight, height and waist, then hip. */
+var MEAS=[['h',1,2,1,'cm','Height'],['w',3,4,1.5,'kg','Weight'],['c',5,6,2,'cm','Chest'],['wa',7,8,1,'cm','Waist'],['hp',9,10,0.75,'cm','Hip']];
+function has(rows,i){return rows.some(function(r){return r[i]!=null})}
+function usable(rows,raw){var o={};MEAS.forEach(function(m){o[m[0]]=has(rows,m[1])?raw[m[0]]:null});return o}
+function analyse(rows,u){
+  return rows.map(function(r){
+    var score=0,mid=0;
+    MEAS.forEach(function(m){score+=m[3]*miss(u[m[0]],r[m[1]],r[m[2]]);mid+=ctr(u[m[0]],r[m[1]],r[m[2]])});
+    return {r:r,score:score,mid:mid};
+  }).sort(function(a,b){return a.score-b.score||a.mid-b.mid});
+}
+function grade(s){return s===0?['In range','b-good']:s<0.4?['Close','b-warn']:['Stretch','b-bad']}
+function note(v,lo,hi,u,label){
+  if(v===null||lo===null||hi===null)return null;
+  if(v<lo)return label+' '+r1(lo-v)+' '+u+' under';
+  if(v>hi)return label+' '+r1(v-hi)+' '+u+' over';
+  return null;
+}
+function whyOf(x,u){return MEAS.map(function(m){return note(u[m[0]],x.r[m[1]],x.r[m[2]],m[4],m[5])}).filter(Boolean)}
+function gauge(label,v,lo,hi,all,idxLo,idxHi,u){
+  var vals=[];all.forEach(function(r){if(r[idxLo]!=null)vals.push(r[idxLo]);if(r[idxHi]!=null)vals.push(r[idxHi])});
+  var min=Math.min.apply(null,vals.concat([v]))-3, max=Math.max.apply(null,vals.concat([v]))+3;
+  var g=el('div'), row=el('div','row'); row.appendChild(el('span','',label));
+  row.appendChild(el('span','',r1(v)+' '+u+(lo==null?' (no range on chart)':' (range '+lo+'–'+hi+')')));
+  var t=el('div','track');
+  if(lo!=null){var b=el('div','band');b.style.left=((lo-min)/(max-min)*100)+'%';b.style.width=((hi-lo)/(max-min)*100)+'%';t.appendChild(b)}
+  var p=el('div','pin');p.style.left=((v-min)/(max-min)*100)+'%';p.setAttribute('aria-hidden','true');t.appendChild(p);
+  g.appendChild(row);g.appendChild(t);return g;
+}
+function used(u){return MEAS.filter(function(m){return u[m[0]]!=null}).map(function(m){return m[5].toLowerCase()})}
+function confidence(b,n){if(b.weak)return 'Lower';return n>=3?'High':'Medium'}
+function isTall(t){return /Tall|T$|T\)$/.test(t)}
+function read(){
+  var imp=val('unit')==='imp',L=imp?2.54:1,h=num('h'),w=num('w'),sex=val('sex');
+  if(h===null||w===null)return null;
+  var f=function(id){var v=num(id);return v===null?null:v*L};
+  return {sex:sex,torso:val('torso'),raw:{h:h*L,w:imp?w*0.45359:w,c:f('c'),wa:f('wa'),hp:f('hp')}};
+}
+function render(){
+  var cards=$('cards'),detail=$('detail'),p=read();
+  cards.textContent='';detail.textContent='';
+  if(!p){detail.appendChild(el('p','','Enter your height and weight to see your fit analysis.'));return}
+  var res={},use={};
+  ORDER.forEach(function(k){var rows=BRANDS[k][p.sex];use[k]=usable(rows,p.raw);res[k]=analyse(rows,use[k])});
+  var tierOf=function(k){var sc=res[k][0].score;return sc===0?0:sc<0.4?1:2};
+  var nOf=function(k){return used(use[k]).length};
+  var sorted=ORDER.slice().sort(function(a,b){return tierOf(a)-tierOf(b)||(BRANDS[a].weak-BRANDS[b].weak)||(nOf(b)-nOf(a))||(res[a][0].score-res[b][0].score)||ORDER.indexOf(a)-ORDER.indexOf(b)});
+  if(!picked)sel=sorted[0];
+  var bb=$('best');bb.textContent='';
+  var top=sorted[0],tb=BRANDS[top];
+  bb.appendChild(el('div','eyebrow','Your best fit'));
+  bb.appendChild(el('div','best-title',tb.name+' '+res[top][0].r[0]));
+  bb.appendChild(el('p','',tierOf(top)===0?'Your measurements sit inside every range this chart uses ('+nOf(top)+' checked). It ranks first because it fits and its chart is the most dependable among the brands that fit.':'This is the closest match, but a measurement falls slightly outside the range. Compare the next size before you order.'));
+  var chip=function(k,dim){var c=el('button','chip'+(dim?' dim':''));c.type='button';c.appendChild(el('b','',BRANDS[k].name));c.appendChild(document.createTextNode(res[k][0].r[0]+(BRANDS[k].weak?' (check chart)':'')));c.addEventListener('click',function(){sel=k;picked=true;render();$('detail').scrollIntoView({behavior:'smooth',block:'nearest'})});return c};
+  var okOthers=sorted.slice(1).filter(function(k){return tierOf(k)<=1}),weakOthers=sorted.slice(1).filter(function(k){return tierOf(k)===2});
+  if(okOthers.length){bb.appendChild(el('h3','','Other brands that fit you'));var cw=el('div','chips');okOthers.forEach(function(k){cw.appendChild(chip(k,false))});bb.appendChild(cw)}
+  if(weakOthers.length){bb.appendChild(el('h3','','Weaker matches, check carefully'));var cw2=el('div','chips');weakOthers.forEach(function(k){cw2.appendChild(chip(k,true))});bb.appendChild(cw2)}
+  sorted.forEach(function(k){
+    var b=BRANDS[k],best=res[k][0],g=grade(best.score),n=used(use[k]).length;
+    var btn=el('button','bc');btn.type='button';btn.setAttribute('aria-pressed',k===sel?'true':'false');
+    if(k===sorted[0])btn.appendChild(el('div','tagtop','Best fit'));btn.appendChild(el('div','bn',b.name));btn.appendChild(el('div','bs',best.r[0]));
+    btn.appendChild(el('span','badge '+g[1],g[0]));
+    btn.appendChild(el('div','bc-conf',b.conf));
+    btn.appendChild(el('div','bc-conf','Confidence: '+confidence(b,n)+' ('+n+' measurements used)'));
+    btn.addEventListener('click',function(){sel=k;picked=true;render()});
+    cards.appendChild(btn);
+  });
+  var b=BRANDS[sel],list=res[sel],best=list[0],uu=use[sel],g=grade(best.score),rows=b[p.sex],n=used(uu).length;
+  var dh=el('div','dhead'),big=el('div','size-big');
+  big.appendChild(el('small','',b.name.toUpperCase()+(p.sex==='m'?" · MEN'S":" · WOMEN'S")));
+  big.appendChild(document.createTextNode(best.r[0]));
+  var d=el('div');d.appendChild(el('span','badge '+g[1],g[0]+' fit'));
+  var issues=whyOf(best,uu);
+  d.appendChild(el('p','',issues.length?issues.join('; ')+'. Compare the next-best size below.':'Every measurement this chart uses sits inside this size’s range.'));
+  dh.appendChild(big);dh.appendChild(d);dh.appendChild(shot(sel));detail.appendChild(dh);
+  var skip=function(m){return false};
+  var missing=MEAS.filter(function(m){return !skip(m)&&has(rows,m[1])&&p.raw[m[0]]==null}).map(function(m){return m[5].toLowerCase()});
+  var unused=MEAS.filter(function(m){return !skip(m)&&p.raw[m[0]]!=null&&!has(rows,m[1])}).map(function(m){return m[5].toLowerCase()});
+  var cov='Confidence: '+confidence(b,n)+'. Used from your numbers: '+used(uu).join(', ')+'.';
+  if(unused.length)cov+=' Not on this brand’s chart, so not used: '+unused.join(', ')+'.';
+  if(missing.length)cov+=' Add your '+missing.join(' and ')+' for a sharper result.';
+  var cp=el('p','why',cov);cp.style.marginTop='12px';detail.appendChild(cp);
+  if(b.weak)detail.appendChild(el('div','warnbox','Check before you buy: '+b.src));
+  var gs=el('div','gauges');
+  ['c','wa','hp','w','h'].forEach(function(key){
+    var m=MEAS.filter(function(x){return x[0]===key})[0];if(uu[key]==null)return;
+    var lo=best.r[m[1]],hi=best.r[m[2]];
+    gs.appendChild(gauge(m[5],uu[key],lo==null?null:lo,hi==null?null:hi,rows,m[1],m[2],m[4]));
+  });
+  detail.appendChild(gs);
+  var rt=el('h3','','Ranked sizes');rt.style.margin='24px 0 8px';detail.appendChild(rt);
+  var rk=el('div','ranks');
+  list.slice(0,3).forEach(function(x,i){
+    var gx=grade(x.score),why=whyOf(x,uu),row=el('div','rk');
+    row.appendChild(el('b','','#'+(i+1)));
+    var m=el('div');m.appendChild(el('div','',x.r[0]));m.appendChild(el('div','why',why.length?why.join('; '):'Inside all ranges'));row.appendChild(m);
+    row.appendChild(el('span','badge '+gx[1],gx[0]));rk.appendChild(row);
+  });
+  detail.appendChild(rk);
+  if(p.torso!=='avg'){
+    var tall=list.slice(0,3).filter(function(x){return isTall(x.r[0])})[0],tn;
+    if(p.torso==='long')tn=isTall(best.r[0])?'Long torso: your best size is already a tall cut.':tall?'Long torso: the tall cut '+tall.r[0]+' also scores close. Try it if the body feels short.':'Long torso: no tall cut scores close for you here. If the body feels short, try the next size up.';
+    else tn='Short torso: avoid tall cuts, and if the body feels long, try the next size down.';
+    var tp=el('p','why',tn+' This is general advice. No brand chart uses torso length.');tp.style.marginTop='12px';detail.appendChild(tp);
+  }
+  if(!b.weak){var sp=el('p','why','Source: '+b.src);sp.style.marginTop='14px';detail.appendChild(sp)}
+  var tier=TIER[val('exp')][val('bud')],suit=b.suits[tier],t=val('temp'),sb=el('div','suit');
+  sb.appendChild(el('div','tag','Suit for your level'));
+  sb.appendChild(el('p','',suit?b.name+' '+suit+'.':b.name+' has no suit at this level in the models covered here.'));
+  if(t==='cold'&&b.cold)sb.appendChild(el('p','','For water under 14 °C, look at the '+b.cold+'.'));
+  else if(t==='cold')sb.appendChild(el('p','','For water under 14 °C, look for a thermal or lined model from '+b.name+'.'));
+  else if(t==='warm')sb.appendChild(el('p','','In warm water, check your race allows a wetsuit.'));
+  var a=el('a','btn','Shop '+b.name+' wetsuits');a.href=b.link;a.target='_blank';a.rel='sponsored noopener';sb.appendChild(a);
+  detail.appendChild(sb);
+}
+function coverage(){
+  var t=$('cov'),hd=el('tr');
+  ['Brand','Height','Weight','Chest','Waist','Hip','Chart source'].forEach(function(x){hd.appendChild(el('th','',x))});
+  t.appendChild(hd);
+  ORDER.forEach(function(k){
+    var b=BRANDS[k],r=el('tr');r.appendChild(el('td','',b.name));
+    MEAS.forEach(function(m){r.appendChild(el('td','',has(b.m,m[1])||has(b.w,m[1])?'✓':'–'))});
+    r.appendChild(el('td','',b.conf));t.appendChild(r);
   });
 }
-
-// ── STATE ─────────────────────────────────────────────────────────
-const ans = {};
-let currentStep = 1;
-const TOTAL = 10;
-
-function activeSuits() {
-  if (ans.gender === 'female') return WOMENS_STD_SUITS;
-  return MENS_SUITS;
+var lastUnit='metric';
+function convert(){
+  var u=val('unit');if(u===lastUnit)return;
+  var f=function(id,k){var v=num(id);if(v!==null)$(id).value=r1(v*k)};
+  if(u==='imp'){f('h',1/2.54);f('w',1/0.45359);f('c',1/2.54);f('wa',1/2.54);f('hp',1/2.54)}else{f('h',2.54);f('w',0.45359);f('c',2.54);f('wa',2.54);f('hp',2.54)}
+  lastUnit=u;
+  $('hu').textContent=u==='imp'?'(in)':'(cm)';$('wu').textContent=u==='imp'?'(lb)':'(kg)';$('cu').textContent=$('wau').textContent=$('hpu').textContent=u==='imp'?'(in)':'(cm)';
 }
-
-// ── GENDER STEP ───────────────────────────────────────────────────
-function pickGender(val) {
-  ans.gender = val;
-  document.querySelectorAll('.gender-opt').forEach(o =>
-    o.classList.toggle('selected', o.querySelector('input').value === val));
-  document.getElementById('next-1').disabled = false;
-  // update modal content for gender
-  document.getElementById('modal-title').textContent = val === 'female' ? 'How to measure your bust' : 'How to measure your chest';
-  document.getElementById('modal-chest').style.display = val === 'female' ? 'none' : 'block';
-  document.getElementById('modal-bust').style.display = val === 'female' ? 'block' : 'none';
-  // update chest label for step 2
-  const isFemale = val === 'female';
-  document.getElementById('chest-label').textContent = isFemale ? 'Bust (cm)' : 'Chest (cm)';
-  document.getElementById('chest').placeholder = isFemale ? 'e.g. 90' : 'e.g. 92';
-  document.getElementById('sizing-note-women').style.display = isFemale ? 'block' : 'none';
-  document.getElementById('meas-hint').textContent = isFemale
-    ? 'These feed directly into Zone3\'s official women\'s size charts. Bust is the most important measurement.'
-    : 'These feed directly into Zone3\'s official size chart. Chest is the most important measurement.';
-  updateMeasurementLabels();
-  updateRankings();
-}
-
-// ── MEASUREMENTS STEP ─────────────────────────────────────────────
-function step2Next() {
-  var hRaw = document.getElementById('height').value;
-  var wRaw = document.getElementById('weight').value;
-  var cRaw = document.getElementById('chest').value;
-  if (!hRaw || !wRaw || !cRaw) {
-    alert('Please fill in all three measurements.');
-    return;
-  }
-  var h = parseHeight(hRaw);
-  var w = parseWeight(wRaw);
-  var c = parseChest(cRaw);
-  var isImperial = ans.unit === 'imperial';
-  if (h < 140 || h > 215) {
-    alert(isImperial ? 'Height should be between 4ft 7in and 7ft 0in.' : 'Height should be between 140 and 215 cm.');
-    return;
-  }
-  if (w < 35 || w > 160) {
-    alert(isImperial ? 'Weight should be between 77 and 350 lbs.' : 'Weight should be between 35 and 160 kg.');
-    return;
-  }
-  if (c < 65 || c > 140) {
-    alert(isImperial ? 'Chest/bust should be between 25 and 55 inches.' : 'Chest/bust should be between 65 and 140 cm.');
-    return;
-  }
-  ans.height = h; ans.weight = w; ans.chest = c;
-  updateRankings();
-  goTo(3);
-}
-
-// ── OPTION PICK ───────────────────────────────────────────────────
-function pick(key, val, stepNum) {
-  ans[key] = val;
-  document.querySelectorAll(`[name="${key}"]`).forEach(r =>
-    r.closest('.opt').classList.toggle('selected', r.value === val));
-  const btn = document.getElementById('next-' + stepNum);
-  if (btn) btn.disabled = false;
-  updateRankings();
-}
-
-// ── NAVIGATION ────────────────────────────────────────────────
-const STEP_ORDER = [1, '1b', 2, 3, 4, 5, 6, 7, 8, 9];
-function goTo(n) {
-  document.getElementById('step-' + currentStep).classList.remove('active');
-  currentStep = n;
-  document.getElementById('step-' + n).classList.add('active');
-  const idx = STEP_ORDER.indexOf(n);
-  document.getElementById('progress').style.width = (idx / TOTAL * 100) + '%';
-  document.getElementById('quiz').scrollIntoView({ behavior:'smooth', block:'start' });
-}
-
-// ── UNITS ────────────────────────────────────────────────
-// default to metric
-ans.unit = 'metric';
-
-function pickUnit(val) {
-  ans.unit = val;
-  var isImperial = val === 'imperial';
-  // toggle button styles
-  var metricBtn = document.getElementById('unit-metric');
-  var imperialBtn = document.getElementById('unit-imperial');
-  if (metricBtn && imperialBtn) {
-    metricBtn.style.border = isImperial ? '1.5px solid var(--ink-30)' : '1.5px solid var(--water)';
-    metricBtn.style.background = isImperial ? 'var(--foam)' : 'var(--water-lt)';
-    metricBtn.style.fontWeight = isImperial ? 'normal' : '600';
-    imperialBtn.style.border = isImperial ? '1.5px solid var(--water)' : '1.5px solid var(--ink-30)';
-    imperialBtn.style.background = isImperial ? 'var(--water-lt)' : 'var(--foam)';
-    imperialBtn.style.fontWeight = isImperial ? '600' : 'normal';
-  }
-  updateMeasurementLabels();
-}
-
-function updateMeasurementLabels() {
-  var isImperial = ans.unit === 'imperial';
-  var isFemale = ans.gender === 'female';
-  var chestWord = isFemale ? 'Bust' : 'Chest';
-  document.getElementById('height-label').textContent = isImperial ? 'Height (ft/in)' : 'Height (cm)';
-  document.getElementById('weight-label').textContent = isImperial ? 'Weight (lbs)' : 'Weight (kg)';
-  document.getElementById('chest-label').textContent  = isImperial ? chestWord + ' (inches)' : chestWord + ' (cm)';
-  var hInput = document.getElementById('height');
-  var wInput = document.getElementById('weight');
-  var cInput = document.getElementById('chest');
-  if (isImperial) {
-    hInput.placeholder = isFemale ? "e.g. 5ft 7in" : "e.g. 5ft 10in";
-    wInput.placeholder = isFemale ? "e.g. 136" : "e.g. 163";
-    cInput.placeholder = isFemale ? "e.g. 35 in" : "e.g. 36 in";
-    hInput.setAttribute('data-unit', 'imperial-height');
-    wInput.setAttribute('data-unit', 'imperial-weight');
-    cInput.setAttribute('data-unit', 'imperial-chest');
-  } else {
-    hInput.placeholder = isFemale ? 'e.g. 168' : 'e.g. 178';
-    wInput.placeholder = isFemale ? 'e.g. 62' : 'e.g. 74';
-    cInput.placeholder = isFemale ? 'e.g. 90' : 'e.g. 92';
-    hInput.removeAttribute('data-unit');
-    wInput.removeAttribute('data-unit');
-    cInput.removeAttribute('data-unit');
-  }
-}
-
-// convert imperial inputs to metric for sizing engine
-// height: accepts decimal feet (5.9), ft'in" (5'10"), or plain cm
-function parseHeight(val) {
-  if (ans.unit !== 'imperial') return +val;
-  // try ft'in" format
-  var m = String(val).match(/^(\d+)'(\d+)"?$/);
-  if (m) return Math.round((+m[1] * 30.48) + (+m[2] * 2.54));
-  // decimal feet e.g. 5.9
-  var f = parseFloat(val);
-  if (!isNaN(f) && f < 8) return Math.round(f * 30.48);
-  return Math.round(f); // fallback treat as cm
-}
-function parseWeight(val) {
-  if (ans.unit !== 'imperial') return +val;
-  return Math.round(+val * 0.453592);
-}
-function parseChest(val) {
-  if (ans.unit !== 'imperial') return +val;
-  return Math.round(+val * 2.54);
-}
-
-// ── COUNTRY ────────────────────────────────────────────────
-function pickCountry(val) {
-  if (!val) return;
-  ans.country = val;
-  document.getElementById('next-1b').disabled = false;
-  updateBudgetLabels();
-}
-
-// ── MEASURE MODAL ──────────────────────────────────────────────
-function openMeasureModal(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  document.getElementById('measure-modal').classList.add('open');
-}
-function closeMeasureModal(e) {
-  if (e.target === document.getElementById('measure-modal')) {
-    document.getElementById('measure-modal').classList.remove('open');
-  }
-}
-
-
-// ── SCORING ───────────────────────────────────────────────────────
-function scoreAll() {
-  return activeSuits().map(s => {
-    let score = s.profile.base;
-    for (const [k, m] of Object.entries(s.profile)) {
-      if (k === 'base') continue;
-      if (ans[k] !== undefined && m[ans[k]] !== undefined) score += m[ans[k]];
-    }
-    return { ...s, score };
-  }).sort((a,b) => b.score - a.score);
-}
-
-function toPct(ranked) {
-  const max = ranked[0].score, min = Math.min(...ranked.map(s=>s.score)), range = max-min||1;
-  return ranked.map((_,i) => Math.max(52, Math.round(97 - i*4 - ((max-ranked[i].score)/range)*8)));
-}
-
-// ── LIVE RANKINGS ─────────────────────────────────────────────────
-const RANK_CLASSES = ['first','second','third','fourth','fifth'];
-function updateRankings() {
-  if (!ans.gender) return; // need at least gender to show anything
-  const ranked = scoreAll();
-  const pcts = toPct(ranked);
-  const answered = Object.keys(ans).filter(k => !['height','weight','chest'].includes(k)).length
-    + (ans.height ? 1 : 0);
-  document.getElementById('rankings-meta').textContent =
-    answered <= 1 ? 'Based on 1 answer so far' : `Based on ${answered} answers so far`;
-
-  const body = document.getElementById('rankings-body');
-  body.innerHTML = '';
-  ranked.forEach((suit, i) => {
-    const div = document.createElement('div');
-    div.className = 'rank-item';
-    div.innerHTML = `
-      <div class="rank-header">
-        <div class="rank-name"><span class="rank-pos ${i===0?'first':''}">#${i+1}</span>${suit.name}</div>
-        <div class="rank-pct">${pcts[i]}%</div>
-      </div>
-      <div class="rank-bar-track">
-        <div class="rank-bar-fill ${RANK_CLASSES[i]||''}" style="width:0%" data-w="${pcts[i]}%"></div>
-      </div>`;
-    body.appendChild(div);
-  });
-  setTimeout(() => {
-    body.querySelectorAll('.rank-bar-fill').forEach(el => { el.style.width = el.dataset.w; });
-  }, 60);
-}
-
-// ── FULL RESULTS ──────────────────────────────────────────────────
-function showResults() {
-  if (!ans.priority) { alert('Please select an option.'); return; }
-  const ranked = scoreAll();
-  const pcts = toPct(ranked);
-
-  // Size: use both women's tables if female, pick best overall winner
-  let sizeResult;
-  if (ans.gender === 'female') {
-    const stdResult = calcSize(ans.height, ans.weight, ans.chest, WOMEN_STD_SIZES, 'Bust');
-    const afResult  = calcSize(ans.height, ans.weight, ans.chest, WOMEN_AF_SIZES,  'Bust');
-    // If top suit is Active-Flex use AF table, otherwise use std
-    const topIsAF = ranked[0].id === 'w-active-flex';
-    sizeResult = topIsAF
-      ? { ...afResult, tag: 'Active-Flex sizing', stdSize: stdResult.size }
-      : { ...stdResult, tag: 'Women\'s standard sizing', afSize: afResult.size };
-  } else {
-    sizeResult = { ...calcSize(ans.height, ans.weight, ans.chest, MEN_SIZES, 'Chest'), tag: 'Men\'s sizing' };
-  }
-
-  const gap = pcts[0] - pcts[1];
-  const conf = gap >= 7 ? { l:'High',   t:'Your answers point clearly to one model over the others.' }
-             : gap >= 3 ? { l:'Good',   t:'A strong match, with one close alternative worth trying on.' }
-                        : { l:'Moderate',t:'Two models are very similar for your profile — try both on if possible.' };
-
-  document.getElementById('quiz').style.display = 'none';
-  const res = document.getElementById('results');
-  res.style.display = 'block';
-
-  document.getElementById('size-badge').textContent = sizeResult.size;
-  document.getElementById('size-label').textContent = 'Recommended size: ' + sizeResult.size;
-  document.getElementById('size-reason').textContent = sizeResult.reason +
-    (sizeResult.afSize ? ` For the Active-Flex specifically, your size would be ${sizeResult.afSize}.` : '') +
-    (sizeResult.stdSize ? ` For the standard range (Aspire, Vision, etc.) your size would be ${sizeResult.stdSize}.` : '');
-  document.getElementById('size-priority-tag').textContent = sizeResult.tag;
-  document.getElementById('conf-pill').textContent = 'Confidence: ' + conf.l;
-  document.getElementById('conf-text').textContent = conf.t;
-  document.getElementById('res-headline').textContent = 'Your best match: ' + ranked[0].brand + ' ' + ranked[0].name;
-  document.getElementById('res-subline').textContent =
-    'We scored all ' + activeSuits().length + ' Zone3 models against your answers. Here is the full breakdown.';
-
-
-  const cards = document.getElementById('match-cards');
-  cards.innerHTML = '';
-  const cls = ['top','second','third','fourth'];
-  ranked.forEach((suit, i) => {
-    const card = document.createElement('div');
-    card.className = 'match-card ' + (cls[i] || '');
-    card.innerHTML = `
-      ${i === 0 ? '<div class="top-label">Best match</div>' : ''}
-      <div class="match-top">
-        <div><div class="match-badge">${suit.brand}</div><div class="match-name">${suit.name}</div></div>
-        <div class="match-pct">${pcts[i]}%</div>
-      </div>
-      <div class="match-bar-track"><div class="match-bar-fill" style="width:0%" data-w="${pcts[i]}%"></div></div>
-      <div class="match-why">${suit.desc(ans)}</div>`;
-    cards.appendChild(card);
-  });
-  setTimeout(() => {
-    cards.querySelectorAll('.match-bar-fill').forEach(el => { el.style.width = el.dataset.w; });
-  }, 120);
-  res.scrollIntoView({ behavior:'smooth' });
-}
-
-// ── RESTART ───────────────────────────────────────────────────────
-// ── DISCOUNT TOGGLE ──────────────────────────────────────────────
-function toggleDiscount() {
-  var panel = document.getElementById('discount-panel');
-  var chevron = document.getElementById('disc-chevron');
-  var isOpen = panel.classList.toggle('open');
-  chevron.classList.toggle('open', isOpen);
-}
-
-function restart() {
-  Object.keys(ans).forEach(k => delete ans[k]);
-  document.querySelectorAll('.opt, .gender-opt').forEach(o => o.classList.remove('selected'));
-  document.querySelectorAll('[id^="next-"]').forEach(b => { b.disabled = true; });
-  // reset country select
-  var cs = document.getElementById('country-select');
-  if (cs) cs.selectedIndex = 0;
-  // reset units to metric
-  ans.unit = 'metric';
-  pickUnit('metric');
-  // close discount panel
-  var dp = document.getElementById('discount-panel');
-  var dc = document.getElementById('disc-chevron');
-  if (dp) dp.classList.remove('open');
-  if (dc) dc.classList.remove('open');
-  // reset budget labels to default
-  var defaults = { low:'Under £200 / €230', mid:'£200–350 / €230–400', high:'£350–550 / €400–640', premium:'£550+ / €640+' };
-  ['low','mid','high','premium'].forEach(function(k) {
-    var el = document.getElementById('blbl-' + k);
-    if (el) el.textContent = defaults[k];
-  });
-  document.getElementById('results').style.display = 'none';
-  document.getElementById('quiz').style.display = 'grid';
-  currentStep = 1;
-  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-  document.getElementById('step-1').classList.add('active');
-  document.getElementById('progress').style.width = '0%';
-  document.getElementById('rankings-body').innerHTML =
-    '<div class="rank-placeholder"><div class="icon">🏊</div><p>Answer the first question to see live rankings</p></div>';
-  document.getElementById('rankings-meta').textContent = 'Updates after each question';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+$('finder').addEventListener('change',function(e){
+  if(e.target.name==='sex'){$('cl').textContent=val('sex')==='m'?'Chest':'Bust';}
+  convert();render()});
+$('finder').addEventListener('input',render);
+$('finder').addEventListener('submit',function(e){e.preventDefault()});
+coverage();render();
 </script>
-
-<!-- MEASUREMENT HELP MODAL -->
-<div class="modal-overlay" id="measure-modal" onclick="closeMeasureModal(event)">
-  <div class="modal">
-    <button class="modal-close" onclick="document.getElementById('measure-modal').classList.remove('open')">&times;</button>
-    <h3 id="modal-title">How to measure your chest</h3>
-    <div id="modal-chest">
-      <div class="measure-step"><div class="measure-num">1</div><p><strong>Get a soft tape measure.</strong> A rigid ruler will not work — use a flexible dressmaker's tape, or a piece of string you can measure against a ruler.</p></div>
-      <div class="measure-step"><div class="measure-num">2</div><p><strong>Stand up straight, breathe normally.</strong> Do not puff out your chest or suck in.</p></div>
-      <div class="measure-step"><div class="measure-num">3</div><p><strong>Wrap the tape around the fullest part of your chest</strong> — this is typically across the nipple line for men. Keep the tape parallel to the floor.</p></div>
-      <div class="measure-step"><div class="measure-num">4</div><p><strong>Read the measurement.</strong> The tape should sit snug but not tight — you should be able to slip one finger underneath.</p></div>
-      <div class="modal-tip">If you are between centimetres, always round up. For wetsuit sizing, a slightly looser chest is better than a constricting one.</div>
-    </div>
-    <div id="modal-bust" style="display:none">
-      <div class="measure-step"><div class="measure-num">1</div><p><strong>Wear a well-fitting, non-padded bra</strong> — or no bra at all. Avoid heavy padding as it adds artificial volume.</p></div>
-      <div class="measure-step"><div class="measure-num">2</div><p><strong>Stand up straight, breathe normally.</strong> Arms relaxed at your sides.</p></div>
-      <div class="measure-step"><div class="measure-num">3</div><p><strong>Wrap the tape around the fullest part of your bust</strong> — across the widest point. Keep the tape parallel to the floor and level all the way around.</p></div>
-      <div class="measure-step"><div class="measure-num">4</div><p><strong>Read the measurement.</strong> The tape should be snug but not compressing. You should be able to breathe freely.</p></div>
-      <div class="modal-tip">Zone3 women's sizing uses bust measurement as the primary fit factor. If you are between sizes, the larger size typically gives more comfort and shoulder mobility.</div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
