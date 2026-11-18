@@ -15,19 +15,20 @@ img{max-width:100%}
 <style>
 /* Layout: disclosure bar, hero copy beside the measurement form, eight brand fit cards, detail panel for the selected brand, tips, FAQ. Cold-water palette, buoy-orange accent. */
 :root{
-  --bg:#eef1f3; --surface:#ffffff; --fg:#0a0f14; --muted:#4d5a64; --line:#d2d9de;
-  --deep:#0a0f14; --accent:#c8f400; --on-accent:#0a0f14; --accent-ink:#0b4fe0; --pin:#0a0f14; --water:#0b4fe0;
-  --good:#17753f; --warn:#9a5f00; --bad:#b3261e; --track:#dfe5e9;
+  --bg:#f4f7fb; --surface:#ffffff; --fg:#0b1b33; --muted:#566176; --line:#dbe3ee;
+  --deep:#0b1b33; --grad:linear-gradient(160deg,#0b1b33 0%,#12306b 100%);
+  --accent:#ff7a1a; --on-accent:#0b1b33; --accent-ink:#1456f0; --pin:#ff7a1a; --water:#1456f0;
+  --good:#17753f; --warn:#9a5f00; --bad:#b3261e; --track:#e3eaf4;
   --display:'Barlow Condensed','Arial Narrow',Impact,sans-serif; --body:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#070a0d; --surface:#10161c; --fg:#eef3f6; --muted:#97a4ad; --line:#222d36;
-  --deep:#000000; --accent:#d4ff1a; --on-accent:#0a0f14; --accent-ink:#d4ff1a; --pin:#d4ff1a; --water:#4d94ff;
-  --good:#5fd197; --warn:#f0b34a; --bad:#ff8a80; --track:#1e2a33; color-scheme:dark}}
+  --bg:#07111f; --surface:#0e1c30; --fg:#eaf0fa; --muted:#9aa9c0; --line:#1f3350;
+  --deep:#050d1a; --accent:#ff8a3d; --on-accent:#0b1b33; --accent-ink:#ff8a3d; --pin:#ff8a3d; --water:#6aa8ff;
+  --good:#5fd197; --warn:#f0b34a; --bad:#ff8a80; --track:#1b2c47; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#070a0d; --surface:#10161c; --fg:#eef3f6; --muted:#97a4ad; --line:#222d36;
-  --deep:#000000; --accent:#d4ff1a; --on-accent:#0a0f14; --accent-ink:#d4ff1a; --pin:#d4ff1a; --water:#4d94ff;
-  --good:#5fd197; --warn:#f0b34a; --bad:#ff8a80; --track:#1e2a33; color-scheme:dark}
+  --bg:#07111f; --surface:#0e1c30; --fg:#eaf0fa; --muted:#9aa9c0; --line:#1f3350;
+  --deep:#050d1a; --accent:#ff8a3d; --on-accent:#0b1b33; --accent-ink:#ff8a3d; --pin:#ff8a3d; --water:#6aa8ff;
+  --good:#5fd197; --warn:#f0b34a; --bad:#ff8a80; --track:#1b2c47; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.6;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
@@ -45,7 +46,7 @@ a{color:var(--water)}
 .hero-copy p{font-size:1.1rem;color:var(--muted)}
 .brands-list{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 0;padding:0;list-style:none}
 .brands-list li{font-family:var(--display);text-transform:uppercase;font-size:1.15rem;letter-spacing:.04em;border:1px solid var(--line);border-radius:4px;padding:3px 10px;background:var(--surface)}
-.finder{background:var(--deep);color:#eaf3f6;border-radius:6px;padding:26px;min-width:0}
+.finder{background:var(--grad);color:#eaf3f6;border-radius:6px;padding:26px;min-width:0}
 .finder h2{font-size:2rem}
 fieldset{border:0;padding:0;margin:0 0 16px;min-width:0}
 legend{font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;opacity:.75;margin-bottom:8px;padding:0}
@@ -103,7 +104,7 @@ section{padding-block:48px;border-top:1px solid var(--line)}
 details.faq{border-bottom:1px solid var(--line);padding:14px 0}
 details.faq summary{cursor:pointer;font-weight:600}
 details.faq p{margin:10px 0 0;color:var(--muted)}
-.best{background:var(--deep);color:#eef3f6;border-radius:6px;padding:26px;margin-top:20px}
+.best{background:var(--grad);color:#eef3f6;border-radius:6px;padding:26px;margin-top:20px}
 .best .eyebrow{color:var(--accent);margin-bottom:.5rem}
 .best-title{font-family:var(--display);text-transform:uppercase;font-size:clamp(2.6rem,8vw,4.4rem);line-height:.95;color:var(--accent)}
 .best p{margin:10px 0 0;color:#c4ced5;max-width:60ch}
@@ -113,7 +114,17 @@ details.faq p{margin:10px 0 0;color:var(--muted)}
 .chip:hover{border-color:var(--accent)}
 .chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .chip b{font-family:var(--display);font-size:1.15rem;text-transform:uppercase;letter-spacing:.03em;margin-right:6px}
-.chip.dim{opacity:.7}
+.chipw{display:inline-flex;align-items:stretch;border:1px solid rgba(238,243,246,.35);border-radius:99px;overflow:hidden}
+.chipw.dim{opacity:.7}
+.chipw .chip{border:0;border-radius:0}
+.chipw .shop{display:flex;align-items:center;padding:6px 14px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:.85rem;text-decoration:none}
+.chipw .shop:hover{filter:brightness(1.08)}
+.deal-big{border:2px solid var(--accent);border-radius:4px;padding:10px 14px;margin-top:18px;font-weight:600;font-size:.95rem;max-width:60ch}
+.deal-big+.btn{margin-top:12px!important}
+.dealtag{align-self:flex-start;font-size:.72rem;font-weight:700;background:var(--accent);color:var(--on-accent);padding:2px 8px;border-radius:3px}
+.dealnote{font-size:.95rem;margin-top:14px}
+.btn-lg{font-size:1.1rem;padding:16px 30px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.best p.small{font-size:.85rem;margin-top:8px}
 .bc .tagtop{font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--good)}
 table{border-collapse:collapse;width:100%;min-width:560px;font-size:.9rem}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
@@ -137,6 +148,7 @@ footer{font-size:.8rem;color:var(--muted);padding-block:0 40px}
       <h1>Which brand and size fits your body?</h1>
       <p>Every wetsuit brand sizes differently. Your Medium at one brand is a Small Tall at another. Enter your measurements once and see your size, and how well it fits, across eight triathlon wetsuit brands.</p>
       <ul class="brands-list" aria-label="Brands covered"><li>Zone3</li><li>Orca</li><li>Sailfish</li><li>Blueseventy</li><li>HUUB</li><li>ROKA</li><li>2XU</li><li>TYR</li></ul>
+      <p class="dealnote"><b>Zone3 offer:</b> 20% off non-sale items when you shop through this page.</p>
     </div>
 
     <form class="finder" id="finder" aria-labelledby="ft" novalidate>
@@ -243,7 +255,7 @@ footer{font-size:.8rem;color:var(--muted);padding-block:0 40px}
 /* Replace each URL with your own affiliate link for that brand. */
 function inch(rows){return rows.map(function(r){var o=[r[0],null,null,null,null];for(var i=1;i<r.length;i++)o.push(Math.round(r[i]*25.4)/10);return o})}
 var BRANDS = {
-  zone3:{name:'Zone3',link:'https://zone3.avln.me/c/NckluOBEQnvA',conf:'Official Zone3 chart',weak:false,
+  zone3:{name:'Zone3',link:'https://zone3.avln.me/c/NckluOBEQnvA',deal:'20% off non-sale items',dealShort:'20% off',conf:'Official Zone3 chart',weak:false,
     src:"Zone3's size chart for the Agile, Advance, Aspire, Vanquish-X and Vision (women's) and its men's wetsuit chart.",
     suits:{entry:'Agile',mid:'Vision',top:'Aspire or Vanquish-X'},cold:'Advance Thermal or Thermal Aspire',
     m:[['Small',163,173,55,65,79,91],['Small Medium',170,178,62,70,89,97],['Small Tall',175,191,64,72,89,97],['Medium',173,183,68,74,97,102],['Medium Tall',175,191,68,78,97,102],['Medium Large',173,188,75,82,102,107],['Large',178,191,82,92,107,112],['X Large',183,196,92,100,112,122],['XX Large',183,196,97,115,117,127]],
@@ -359,14 +371,17 @@ function render(){
   bb.appendChild(el('div','eyebrow','Your best fit'));
   bb.appendChild(el('div','best-title',tb.name+' '+res[top][0].r[0]));
   bb.appendChild(el('p','',tierOf(top)===0?'Your measurements sit inside every range this chart uses ('+nOf(top)+' checked). It ranks first because it fits and its chart is the most dependable among the brands that fit.':'This is the closest match, but a measurement falls slightly outside the range. Compare the next size before you order.'));
-  var chip=function(k,dim){var c=el('button','chip'+(dim?' dim':''));c.type='button';c.appendChild(el('b','',BRANDS[k].name));c.appendChild(document.createTextNode(res[k][0].r[0]+(BRANDS[k].weak?' (check chart)':'')));c.addEventListener('click',function(){sel=k;picked=true;render();$('detail').scrollIntoView({behavior:'smooth',block:'nearest'})});return c};
+  if(tb.deal){var dl=el('div','deal-big','Get '+tb.deal+' at '+tb.name+' when you shop through this page. Sale items excluded.');bb.appendChild(dl)}
+  var cta=el('a','btn btn-lg','Shop '+tb.name+' wetsuits \u2192');cta.href=tb.link;cta.target='_blank';cta.rel='sponsored noopener';cta.style.marginTop='18px';bb.appendChild(cta);
+  bb.appendChild(el('p','small','Opens '+tb.name+'\u2019s site in a new tab. Choose size '+res[top][0].r[0]+' there and check it is in stock.'));
+  var chip=function(k,dim){var w=el('span','chipw'+(dim?' dim':''));var c=el('button','chip');c.type='button';c.appendChild(el('b','',BRANDS[k].name));c.appendChild(document.createTextNode(res[k][0].r[0]+(BRANDS[k].weak?' (check chart)':'')));c.addEventListener('click',function(){sel=k;picked=true;render();$('detail').scrollIntoView({behavior:'smooth',block:'nearest'})});var a=el('a','shop',(BRANDS[k].dealShort?'Shop, '+BRANDS[k].dealShort+' ':'Shop ')+'\u2192');a.href=BRANDS[k].link;a.target='_blank';a.rel='sponsored noopener';a.setAttribute('aria-label','Shop '+BRANDS[k].name+' wetsuits');w.appendChild(c);w.appendChild(a);return w};
   var okOthers=sorted.slice(1).filter(function(k){return tierOf(k)<=1}),weakOthers=sorted.slice(1).filter(function(k){return tierOf(k)===2});
   if(okOthers.length){bb.appendChild(el('h3','','Other brands that fit you'));var cw=el('div','chips');okOthers.forEach(function(k){cw.appendChild(chip(k,false))});bb.appendChild(cw)}
   if(weakOthers.length){bb.appendChild(el('h3','','Weaker matches, check carefully'));var cw2=el('div','chips');weakOthers.forEach(function(k){cw2.appendChild(chip(k,true))});bb.appendChild(cw2)}
   sorted.forEach(function(k){
     var b=BRANDS[k],best=res[k][0],g=grade(best.score),n=used(use[k]).length;
     var btn=el('button','bc');btn.type='button';btn.setAttribute('aria-pressed',k===sel?'true':'false');
-    if(k===sorted[0])btn.appendChild(el('div','tagtop','Best fit'));btn.appendChild(el('div','bn',b.name));btn.appendChild(el('div','bs',best.r[0]));
+    if(k===sorted[0])btn.appendChild(el('div','tagtop','Best fit'));btn.appendChild(el('div','bn',b.name));if(b.dealShort)btn.appendChild(el('div','dealtag',b.dealShort+' non-sale items'));btn.appendChild(el('div','bs',best.r[0]));
     btn.appendChild(el('span','badge '+g[1],g[0]));
     btn.appendChild(el('div','bc-conf',b.conf));
     btn.appendChild(el('div','bc-conf','Confidence: '+confidence(b,n)+' ('+n+' measurements used)'));
@@ -418,7 +433,8 @@ function render(){
   if(t==='cold'&&b.cold)sb.appendChild(el('p','','For water under 14 °C, look at the '+b.cold+'.'));
   else if(t==='cold')sb.appendChild(el('p','','For water under 14 °C, look for a thermal or lined model from '+b.name+'.'));
   else if(t==='warm')sb.appendChild(el('p','','In warm water, check your race allows a wetsuit.'));
-  var a=el('a','btn','Shop '+b.name+' wetsuits');a.href=b.link;a.target='_blank';a.rel='sponsored noopener';sb.appendChild(a);
+  if(b.deal){var dd=el('div','deal-big','Get '+b.deal+' at '+b.name+' when you shop through this page. Sale items excluded.');sb.appendChild(dd)}
+  var a=el('a','btn btn-lg','Shop '+b.name+' wetsuits \u2192');a.href=b.link;a.target='_blank';a.rel='sponsored noopener';sb.appendChild(a);sb.appendChild(el('p','why','Opens '+b.name+'\u2019s site in a new tab. Choose size '+best.r[0]+' and check it is in stock.')).style.marginTop='10px';
   detail.appendChild(sb);
 }
 function coverage(){
